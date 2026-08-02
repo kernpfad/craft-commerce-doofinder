@@ -48,9 +48,9 @@
         "class": "fipschen95\\commercedoofinder\\CommerceDoofinder",
         "changelogUrl": "https://raw.githubusercontent.com/kernpfad/commerce-doofinder/main/CHANGELOG.md",
         "developerUrl": "https://kernpfad.dev",
-        "imprintUrl": "https://kernpfad.dev/impressum",
-        "privacyPolicyUrl": "https://kernpfad.dev/datenschutz",
-        "termsUrl": "https://kernpfad.dev/agb"
+        "imprintUrl": "https://kernpfad.dev/en/legal-notice",
+        "privacyPolicyUrl": "https://kernpfad.dev/en/privacy-policy",
+        "termsUrl": "https://kernpfad.dev/en/terms-and-conditions"
     },
     "config": {
         "allow-plugins": {
