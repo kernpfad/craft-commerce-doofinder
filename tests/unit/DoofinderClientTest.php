@@ -2,11 +2,11 @@
 
 namespace kernpfad\commercedoofinder\tests\unit;
 
-use kernpfad\commercedoofinder\services\DoofinderClient;
 use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
+use kernpfad\commercedoofinder\services\DoofinderClient;
 use PHPUnit\Framework\TestCase;
 
 /**
