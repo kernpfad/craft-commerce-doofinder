@@ -2,11 +2,21 @@
     "name": "fipschen95/commerce-doofinder",
     "description": "A Doofinder integration for Craft Commerce: real-time product/variant sync to a Doofinder search index plus a zero-downtime full-catalog reindex command. Doofinder's own drop-in search widget handles the front end.",
     "type": "craft-plugin",
+    "keywords": [
+        "craft",
+        "cms",
+        "craftcms",
+        "craft-plugin",
+        "commerce",
+        "doofinder",
+        "search",
+        "catalog"
+    ],
     "license": "proprietary",
     "support": {
         "email": "rene.neuburger@gmx.de",
-        "docs": "https://github.com/fipschen95/craftcms-plugins/tree/main/commerce-doofinder",
-        "issues": "https://github.com/fipschen95/craftcms-plugins/issues"
+        "docs": "https://github.com/kernpfad/commerce-doofinder",
+        "issues": "https://github.com/kernpfad/commerce-doofinder/issues"
     },
     "require": {
         "php": "^8.2",
@@ -34,8 +44,10 @@
         "handle": "commerce-doofinder",
         "name": "Commerce Doofinder",
         "developer": "fipschen95",
-        "documentationUrl": "https://github.com/fipschen95/craftcms-plugins/tree/main/commerce-doofinder",
-        "class": "fipschen95\\commercedoofinder\\CommerceDoofinder"
+        "documentationUrl": "https://github.com/kernpfad/commerce-doofinder",
+        "class": "fipschen95\\commercedoofinder\\CommerceDoofinder",
+        "changelogUrl": "https://raw.githubusercontent.com/kernpfad/commerce-doofinder/main/CHANGELOG.md",
+        "developerUrl": "https://github.com/kernpfad"
     },
     "config": {
         "allow-plugins": {
