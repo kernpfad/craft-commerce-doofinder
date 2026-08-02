@@ -2,12 +2,15 @@
 
 declare(strict_types=1);
 
-use craft\rector\SetList;
 use Rector\Config\RectorConfig;
 
 return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->paths([
         __DIR__ . '/src',
     ]);
-    $rectorConfig->sets([SetList::CRAFT_CMS_50]);
+    // Load the set file directly — craft\rector\SetList still implements a
+    // Rector 1 interface that was removed in Rector 2.
+    $rectorConfig->sets([
+        __DIR__ . '/vendor/craftcms/rector/sets/craft-cms-50.php',
+    ]);
 };

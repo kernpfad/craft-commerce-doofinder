@@ -101,7 +101,7 @@ class CatalogSyncService extends Component
         }
 
         Queue::push(new DeleteProductItemsJob([
-            'productTitle' => $variant->getProduct()?->title ?? '',
+            'productTitle' => $variant->getProduct()->title ?? '',
             'variantIds' => [(string)$variant->id],
         ]), queue: $this->queue);
     }

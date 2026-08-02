@@ -16,7 +16,9 @@
     "support": {
         "email": "rene.neuburger@gmx.de",
         "docs": "https://github.com/kernpfad/craft-commerce-doofinder",
-        "issues": "https://github.com/kernpfad/craft-commerce-doofinder/issues"
+        "issues": "https://github.com/kernpfad/craft-commerce-doofinder/issues",
+        "source": "https://github.com/kernpfad/craft-commerce-doofinder",
+        "security": "https://github.com/kernpfad/craft-commerce-doofinder/blob/main/SECURITY.md"
     },
     "require": {
         "php": "^8.2",
@@ -25,10 +27,10 @@
     },
     "require-dev": {
         "craftcms/ecs": "dev-main",
-        "craftcms/phpstan": "dev-main",
-        "craftcms/rector": "dev-main",
+        "craftcms/rector": "dev-craft6",
         "phpunit/phpunit": "^11.0",
-        "vlucas/phpdotenv": "^5.6"
+        "vlucas/phpdotenv": "^5.6",
+        "phpstan/phpstan": "^2.2"
     },
     "autoload": {
         "psr-4": {
@@ -57,15 +59,31 @@
             "craftcms/plugin-installer": true,
             "yiisoft/yii2-composer": true
         },
-        "preferred-install": "source"
+        "preferred-install": "source",
+        "sort-packages": true
     },
     "scripts": {
-        "check-cs": "ecs check",
-        "fix-cs": "ecs check --fix",
-        "phpstan": "phpstan analyse",
+        "check-cs": "ecs check --ansi",
+        "fix-cs": "ecs check --ansi --fix",
+        "phpstan": "phpstan analyse --memory-limit=1G --ansi",
+        "rector": "rector process --dry-run --ansi",
+        "rector:fix": "rector process --ansi",
+        "check": [
+            "@check-cs",
+            "@phpstan",
+            "@rector",
+            "@test:unit"
+        ],
+        "test": "phpunit --testsuite unit",
         "test:unit": "phpunit --testsuite unit",
         "test:integration": "phpunit --testsuite integration"
     },
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "authors": [
+        {
+            "name": "Kernpfad",
+            "homepage": "https://kernpfad.dev"
+        }
+    ]
 }
