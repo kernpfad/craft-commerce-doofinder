@@ -1,0 +1,56 @@
+{
+    "name": "fipschen95/commerce-doofinder",
+    "description": "A Doofinder integration for Craft Commerce: real-time product/variant sync to a Doofinder search index plus a zero-downtime full-catalog reindex command. Doofinder's own drop-in search widget handles the front end.",
+    "type": "craft-plugin",
+    "license": "proprietary",
+    "support": {
+        "email": "rene.neuburger@gmx.de",
+        "docs": "https://github.com/fipschen95/craftcms-plugins/tree/main/commerce-doofinder",
+        "issues": "https://github.com/fipschen95/craftcms-plugins/issues"
+    },
+    "require": {
+        "php": "^8.2",
+        "craftcms/cms": "^5.0.0",
+        "craftcms/commerce": "^5.0.0"
+    },
+    "require-dev": {
+        "craftcms/ecs": "dev-main",
+        "craftcms/phpstan": "dev-main",
+        "craftcms/rector": "dev-main",
+        "phpunit/phpunit": "^11.0",
+        "vlucas/phpdotenv": "^5.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "fipschen95\\commercedoofinder\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "fipschen95\\commercedoofinder\\tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "handle": "commerce-doofinder",
+        "name": "Commerce Doofinder",
+        "developer": "fipschen95",
+        "documentationUrl": "https://github.com/fipschen95/craftcms-plugins/tree/main/commerce-doofinder",
+        "class": "fipschen95\\commercedoofinder\\CommerceDoofinder"
+    },
+    "config": {
+        "allow-plugins": {
+            "craftcms/plugin-installer": true,
+            "yiisoft/yii2-composer": true
+        },
+        "preferred-install": "source"
+    },
+    "scripts": {
+        "check-cs": "ecs check",
+        "fix-cs": "ecs check --fix",
+        "phpstan": "phpstan analyse",
+        "test:unit": "phpunit --testsuite unit",
+        "test:integration": "phpunit --testsuite integration"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

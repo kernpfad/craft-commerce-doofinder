@@ -1,0 +1,59 @@
+{% import "_includes/forms" as forms %}
+
+<div class="flex-fields">
+    {{ forms.selectField({
+        label: "Search zone"|t('commerce-doofinder'),
+        instructions: "Your Doofinder account's regional API endpoint, shown in the Doofinder Admin Panel."|t('commerce-doofinder'),
+        id: 'searchZone',
+        name: 'searchZone',
+        value: settings.searchZone,
+        options: [
+            { label: 'Europe (eu1)', value: 'eu1' },
+            { label: 'US (us1)', value: 'us1' },
+            { label: 'Asia Pacific (ap1)', value: 'ap1' },
+        ],
+    }) }}
+
+    {{ forms.textField({
+        label: "API token"|t('commerce-doofinder'),
+        instructions: "From the Doofinder Admin Panel: Account → API Keys."|t('commerce-doofinder'),
+        id: 'apiToken',
+        name: 'apiToken',
+        value: settings.apiToken,
+    }) }}
+
+    {{ forms.textField({
+        label: "Search engine hash ID"|t('commerce-doofinder'),
+        instructions: "The target search engine's hash ID (32 hex characters), from the Doofinder Admin Panel."|t('commerce-doofinder'),
+        id: 'searchEngineHashId',
+        name: 'searchEngineHashId',
+        value: settings.searchEngineHashId,
+    }) }}
+
+    {{ forms.textField({
+        label: "Index name"|t('commerce-doofinder'),
+        instructions: "The Doofinder index name products/variants are synced into."|t('commerce-doofinder'),
+        id: 'indexName',
+        name: 'indexName',
+        value: settings.indexName,
+        placeholder: 'product',
+    }) }}
+
+    {{ forms.textField({
+        label: "Queue component ID"|t('commerce-doofinder'),
+        instructions: "The Yii application component this plugin's sync jobs are pushed to. Leave as `queue` to use Craft's own default queue. Set this to a different component ID — defined in `config/app.php`, backed by a real message-queue driver — to isolate Doofinder sync traffic from the rest of the site's queue jobs. Falls back to the default queue if the configured component isn't available."|t('commerce-doofinder'),
+        id: 'queueComponentId',
+        name: 'queueComponentId',
+        value: settings.queueComponentId,
+        placeholder: 'queue',
+    }) }}
+
+    {{ forms.textareaField({
+        label: "Custom field mapping"|t('commerce-doofinder'),
+        instructions: "One mapping per line, as `craftFieldHandle=doofinderFieldKey`. For example: `brand=brand`. Read from the product (applied to every variant of that product). Anything not listed here is never sent to Doofinder."|t('commerce-doofinder'),
+        id: 'fieldMappingRaw',
+        name: 'fieldMappingRaw',
+        value: settings.fieldMappingRaw,
+        rows: 6,
+    }) }}
+</div>
