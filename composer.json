@@ -1,5 +1,5 @@
 {
-    "name": "kernpfad/commerce-doofinder",
+    "name": "kernpfad/craft-commerce-doofinder",
     "description": "A Doofinder integration for Craft Commerce: real-time product/variant sync to a Doofinder search index plus a zero-downtime full-catalog reindex command. Doofinder's own drop-in search widget handles the front end.",
     "type": "craft-plugin",
     "keywords": [
@@ -15,8 +15,8 @@
     "license": "proprietary",
     "support": {
         "email": "rene.neuburger@gmx.de",
-        "docs": "https://github.com/kernpfad/commerce-doofinder",
-        "issues": "https://github.com/kernpfad/commerce-doofinder/issues"
+        "docs": "https://github.com/kernpfad/craft-commerce-doofinder",
+        "issues": "https://github.com/kernpfad/craft-commerce-doofinder/issues"
     },
     "require": {
         "php": "^8.2",
@@ -44,9 +44,9 @@
         "handle": "commerce-doofinder",
         "name": "Commerce Doofinder",
         "developer": "Kernpfad",
-        "documentationUrl": "https://github.com/kernpfad/commerce-doofinder",
+        "documentationUrl": "https://github.com/kernpfad/craft-commerce-doofinder",
         "class": "kernpfad\\commercedoofinder\\CommerceDoofinder",
-        "changelogUrl": "https://raw.githubusercontent.com/kernpfad/commerce-doofinder/main/CHANGELOG.md",
+        "changelogUrl": "https://raw.githubusercontent.com/kernpfad/craft-commerce-doofinder/main/CHANGELOG.md",
         "developerUrl": "https://kernpfad.dev",
         "imprintUrl": "https://kernpfad.dev/en/legal-notice",
         "privacyPolicyUrl": "https://kernpfad.dev/en/privacy-policy",
