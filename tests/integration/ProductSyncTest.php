@@ -1,6 +1,6 @@
 <?php
 
-namespace fipschen95\commercedoofinder\tests\integration;
+namespace kernpfad\commercedoofinder\tests\integration;
 
 /**
  * Boots a real Craft + Commerce application and drives the actual
@@ -31,8 +31,8 @@ use craft\commerce\elements\Variant;
 use craft\commerce\models\ProductType;
 use craft\commerce\models\ProductTypeSite;
 use craft\commerce\Plugin as Commerce;
-use fipschen95\commercedoofinder\CommerceDoofinder;
-use fipschen95\commercedoofinder\services\CatalogSyncService;
+use kernpfad\commercedoofinder\CommerceDoofinder;
+use kernpfad\commercedoofinder\services\CatalogSyncService;
 use PHPUnit\Framework\TestCase;
 
 class ProductSyncTest extends TestCase

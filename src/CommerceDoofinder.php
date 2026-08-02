@@ -1,6 +1,6 @@
 <?php
 
-namespace fipschen95\commercedoofinder;
+namespace kernpfad\commercedoofinder;
 
 use Craft;
 use craft\base\Element;
@@ -9,9 +9,9 @@ use craft\base\Plugin;
 use craft\commerce\elements\Product;
 use craft\commerce\elements\Variant;
 use craft\events\ModelEvent;
-use fipschen95\commercedoofinder\models\Settings;
-use fipschen95\commercedoofinder\services\CatalogSyncService;
-use fipschen95\commercedoofinder\services\DoofinderClient;
+use kernpfad\commercedoofinder\models\Settings;
+use kernpfad\commercedoofinder\services\CatalogSyncService;
+use kernpfad\commercedoofinder\services\DoofinderClient;
 use yii\base\Event;
 use yii\queue\Queue as YiiQueue;
 
@@ -30,7 +30,7 @@ class CommerceDoofinder extends Plugin
         parent::init();
 
         if (Craft::$app->getRequest()->getIsConsoleRequest()) {
-            $this->controllerNamespace = 'fipschen95\\commercedoofinder\\console\\controllers';
+            $this->controllerNamespace = 'kernpfad\\commercedoofinder\\console\\controllers';
         }
 
         $this->set('catalogSync', function() {

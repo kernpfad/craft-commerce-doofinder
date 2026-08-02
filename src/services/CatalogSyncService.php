@@ -1,13 +1,13 @@
 <?php
 
-namespace fipschen95\commercedoofinder\services;
+namespace kernpfad\commercedoofinder\services;
 
 use craft\base\Element;
 use craft\commerce\elements\Product;
 use craft\commerce\elements\Variant;
 use craft\helpers\Queue;
-use fipschen95\commercedoofinder\jobs\DeleteProductItemsJob;
-use fipschen95\commercedoofinder\jobs\SyncProductItemsJob;
+use kernpfad\commercedoofinder\jobs\DeleteProductItemsJob;
+use kernpfad\commercedoofinder\jobs\SyncProductItemsJob;
 use yii\base\Component;
 use yii\queue\Queue as YiiQueue;
 

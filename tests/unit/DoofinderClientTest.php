@@ -1,8 +1,8 @@
 <?php
 
-namespace fipschen95\commercedoofinder\tests\unit;
+namespace kernpfad\commercedoofinder\tests\unit;
 
-use fipschen95\commercedoofinder\services\DoofinderClient;
+use kernpfad\commercedoofinder\services\DoofinderClient;
 use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;

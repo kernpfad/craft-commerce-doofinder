@@ -1,10 +1,10 @@
 <?php
 
-namespace fipschen95\commercedoofinder\console\controllers;
+namespace kernpfad\commercedoofinder\console\controllers;
 
 use craft\commerce\elements\Product;
 use craft\console\Controller;
-use fipschen95\commercedoofinder\CommerceDoofinder;
+use kernpfad\commercedoofinder\CommerceDoofinder;
 use Throwable;
 use yii\console\ExitCode;
 

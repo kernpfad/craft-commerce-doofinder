@@ -1,6 +1,6 @@
 <?php
 
-namespace fipschen95\commercedoofinder\models;
+namespace kernpfad\commercedoofinder\models;
 
 use craft\base\Model;
 

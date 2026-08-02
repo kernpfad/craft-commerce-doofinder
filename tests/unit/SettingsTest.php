@@ -1,8 +1,8 @@
 <?php
 
-namespace fipschen95\commercedoofinder\tests\unit;
+namespace kernpfad\commercedoofinder\tests\unit;
 
-use fipschen95\commercedoofinder\models\Settings;
+use kernpfad\commercedoofinder\models\Settings;
 use PHPUnit\Framework\TestCase;
 
 class SettingsTest extends TestCase

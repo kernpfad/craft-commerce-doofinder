@@ -1,14 +1,14 @@
 <?php
 
-namespace fipschen95\commercedoofinder\jobs;
+namespace kernpfad\commercedoofinder\jobs;
 
 use Craft;
 use craft\queue\BaseJob;
-use fipschen95\commercedoofinder\CommerceDoofinder;
+use kernpfad\commercedoofinder\CommerceDoofinder;
 
 /**
  * Upserts every variant item for one product. Payloads are built ahead of
- * time by {@see \fipschen95\commercedoofinder\services\CatalogSyncService}
+ * time by {@see \kernpfad\commercedoofinder\services\CatalogSyncService}
  * from a real Product/Variant snapshot — this job only does network calls,
  * so a Doofinder failure here never affects the product save that queued it.
  */

@@ -1,14 +1,14 @@
 <?php
 
-namespace fipschen95\commercedoofinder\jobs;
+namespace kernpfad\commercedoofinder\jobs;
 
 use Craft;
 use craft\queue\BaseJob;
-use fipschen95\commercedoofinder\CommerceDoofinder;
+use kernpfad\commercedoofinder\CommerceDoofinder;
 
 /**
  * Deletes every variant item for one deleted product. Delete is
- * 404-tolerant in {@see \fipschen95\commercedoofinder\services\DoofinderClient::deleteItem()},
+ * 404-tolerant in {@see \kernpfad\commercedoofinder\services\DoofinderClient::deleteItem()},
  * so an item that was never synced (e.g. it was disabled/unpublished the
  * whole time) doesn't turn a product delete into a failed job.
  */

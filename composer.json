@@ -1,5 +1,5 @@
 {
-    "name": "fipschen95/commerce-doofinder",
+    "name": "kernpfad/commerce-doofinder",
     "description": "A Doofinder integration for Craft Commerce: real-time product/variant sync to a Doofinder search index plus a zero-downtime full-catalog reindex command. Doofinder's own drop-in search widget handles the front end.",
     "type": "craft-plugin",
     "keywords": [
@@ -32,20 +32,20 @@
     },
     "autoload": {
         "psr-4": {
-            "fipschen95\\commercedoofinder\\": "src/"
+            "kernpfad\\commercedoofinder\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "fipschen95\\commercedoofinder\\tests\\": "tests/"
+            "kernpfad\\commercedoofinder\\tests\\": "tests/"
         }
     },
     "extra": {
         "handle": "commerce-doofinder",
         "name": "Commerce Doofinder",
-        "developer": "fipschen95",
+        "developer": "Kernpfad",
         "documentationUrl": "https://github.com/kernpfad/commerce-doofinder",
-        "class": "fipschen95\\commercedoofinder\\CommerceDoofinder",
+        "class": "kernpfad\\commercedoofinder\\CommerceDoofinder",
         "changelogUrl": "https://raw.githubusercontent.com/kernpfad/commerce-doofinder/main/CHANGELOG.md",
         "developerUrl": "https://kernpfad.dev",
         "imprintUrl": "https://kernpfad.dev/en/legal-notice",

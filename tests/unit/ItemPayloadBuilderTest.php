@@ -1,8 +1,8 @@
 <?php
 
-namespace fipschen95\commercedoofinder\tests\unit;
+namespace kernpfad\commercedoofinder\tests\unit;
 
-use fipschen95\commercedoofinder\services\ItemPayloadBuilder;
+use kernpfad\commercedoofinder\services\ItemPayloadBuilder;
 use PHPUnit\Framework\TestCase;
 
 class ItemPayloadBuilderTest extends TestCase

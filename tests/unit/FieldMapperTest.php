@@ -1,8 +1,8 @@
 <?php
 
-namespace fipschen95\commercedoofinder\tests\unit;
+namespace kernpfad\commercedoofinder\tests\unit;
 
-use fipschen95\commercedoofinder\services\FieldMapper;
+use kernpfad\commercedoofinder\services\FieldMapper;
 use PHPUnit\Framework\TestCase;
 
 class FieldMapperTest extends TestCase

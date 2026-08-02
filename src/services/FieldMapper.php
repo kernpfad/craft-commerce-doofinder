@@ -1,6 +1,6 @@
 <?php
 
-namespace fipschen95\commercedoofinder\services;
+namespace kernpfad\commercedoofinder\services;
 
 /**
  * Pure mapping of a flat array of Craft product field values onto Doofinder

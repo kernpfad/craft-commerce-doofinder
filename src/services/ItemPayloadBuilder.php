@@ -1,6 +1,6 @@
 <?php
 
-namespace fipschen95\commercedoofinder\services;
+namespace kernpfad\commercedoofinder\services;
 
 /**
  * Pure construction of Doofinder item payloads (verified against
