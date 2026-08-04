@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace kernpfad\commercedoofinder;
 
 use Craft;
@@ -47,6 +49,16 @@ class CommerceDoofinder extends Plugin
         // variant's *own* EVENT_AFTER_SAVE is the reliable point its id and
         // getProduct() are both actually available. See CatalogSyncService's
         // class docblock.
+        Event::on(
+            Product::class,
+            Element::EVENT_AFTER_SAVE,
+            function(ModelEvent $event) {
+                /** @var Product $product */
+                $product = $event->sender;
+                $this->catalogSync->removeDisabledProductFromIndex($product);
+            }
+        );
+
         Event::on(
             Variant::class,
             Element::EVENT_AFTER_SAVE,

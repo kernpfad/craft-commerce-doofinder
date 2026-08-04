@@ -10,3 +10,7 @@
 - Every Doofinder API call runs on the queue; a Doofinder outage never blocks a product save.
 - Added explicit request timeouts (5s connect, 15s total; 60s for the bulk endpoint used by the reindex command) to the Doofinder API client. Craft's shared Guzzle client sets none, so an unresponsive Doofinder would have held a queue worker open until PHP's execution limit rather than failing and letting Craft retry.
 - Fixed: drafts and revisions were being indexed as if they were real products. Because Craft creates a revision on every control-panel publish, an actively-edited store accumulated a junk entry in the live search index per edit — keyed to the draft/revision's element ID, never removed, and shown in real customer search results. Drafts, revisions, and multi-site propagation saves are now all skipped.
+- Fixed: disabled products and variants remained in the Doofinder index after being turned off. Disabled variants are now removed on save; disabling a whole product removes every variant item even when Commerce does not fire separate variant save events.
+- Fixed: a null product on variant delete could crash job queueing.
+- Added: `FieldValueNormalizer` to flatten Craft field values (assets, options, categories, dates, etc.) into JSON-safe scalars before they are sent to Doofinder.
+- Added: `declare(strict_types=1)` across all plugin and test source files.

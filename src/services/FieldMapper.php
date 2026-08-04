@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace kernpfad\commercedoofinder\services;
 
 /**
@@ -14,6 +16,11 @@ namespace kernpfad\commercedoofinder\services;
  */
 class FieldMapper
 {
+    public function __construct(
+        private readonly FieldValueNormalizer $valueNormalizer = new FieldValueNormalizer(),
+    ) {
+    }
+
     /**
      * @param array<string, string> $mapping craftFieldHandle => doofinderFieldKey
      * @param array<string, mixed> $fieldValues craftFieldHandle => value, as already extracted from the product
@@ -28,7 +35,7 @@ class FieldMapper
                 continue;
             }
 
-            $value = $fieldValues[$fieldHandle];
+            $value = $this->valueNormalizer->normalize($fieldValues[$fieldHandle]);
 
             if ($value === null || $value === '') {
                 continue;

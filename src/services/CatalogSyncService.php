@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace kernpfad\commercedoofinder\services;
 
 use craft\base\Element;
@@ -73,6 +75,18 @@ class CatalogSyncService extends Component
             && !$element->propagating;
     }
 
+    /**
+     * Whether a product/variant pair should appear in the live Doofinder
+     * index for its site. Disabled elements stay syncable (they still fire
+     * save events) but must be removed from the index instead of upserted.
+     */
+    private function isEnabledForIndex(Product $product, Variant $variant): bool
+    {
+        $siteId = $product->siteId;
+
+        return $product->getEnabledForSite($siteId) && $variant->getEnabledForSite($siteId);
+    }
+
     public function syncVariant(Variant $variant): void
     {
         if (!$this->isSyncable($variant)) {
@@ -82,6 +96,12 @@ class CatalogSyncService extends Component
         $product = $variant->getProduct();
 
         if ($product === null || !$this->isSyncable($product)) {
+            return;
+        }
+
+        if (!$this->isEnabledForIndex($product, $variant)) {
+            $this->queueVariantDeletion($variant, $product);
+
             return;
         }
 
@@ -100,10 +120,7 @@ class CatalogSyncService extends Component
             return;
         }
 
-        Queue::push(new DeleteProductItemsJob([
-            'productTitle' => $variant->getProduct()->title ?? '',
-            'variantIds' => [(string)$variant->id],
-        ]), queue: $this->queue);
+        $this->queueVariantDeletion($variant, $variant->getProduct());
     }
 
     public function deleteProduct(Product $product): void
@@ -112,22 +129,21 @@ class CatalogSyncService extends Component
             return;
         }
 
-        $variantIds = [];
+        $this->queueVariantIdsDeletion($product->title ?? '', $this->collectVariantIds($product));
+    }
 
-        foreach ($product->getVariants() as $variant) {
-            if ($variant->id !== null) {
-                $variantIds[] = (string)$variant->id;
-            }
-        }
-
-        if ($variantIds === []) {
+    /**
+     * When a whole product is disabled, Commerce saves the product element
+     * but does not necessarily fire a separate Variant::EVENT_AFTER_SAVE for
+     * every variant — so each variant's item must be removed here.
+     */
+    public function removeDisabledProductFromIndex(Product $product): void
+    {
+        if (!$this->isSyncable($product) || $product->getEnabledForSite($product->siteId)) {
             return;
         }
 
-        Queue::push(new DeleteProductItemsJob([
-            'productTitle' => $product->title ?? '',
-            'variantIds' => $variantIds,
-        ]), queue: $this->queue);
+        $this->queueVariantIdsDeletion($product->title ?? '', $this->collectVariantIds($product));
     }
 
     /**
@@ -140,14 +156,14 @@ class CatalogSyncService extends Component
      */
     public function buildVariantPayloads(Product $product): array
     {
-        if ($product->id === null) {
+        if ($product->id === null || !$product->getEnabledForSite($product->siteId)) {
             return [];
         }
 
         $variantPayloads = [];
 
         foreach ($product->getVariants() as $variant) {
-            if ($variant->id === null) {
+            if ($variant->id === null || !$this->isEnabledForIndex($product, $variant)) {
                 continue;
             }
 
@@ -187,5 +203,47 @@ class CatalogSyncService extends Component
         }
 
         return $this->fieldMapper->mapFields($this->fieldMapping, $fieldValues);
+    }
+
+    private function queueVariantDeletion(Variant $variant, ?Product $product): void
+    {
+        if ($variant->id === null) {
+            return;
+        }
+
+        $productTitle = $product === null ? '' : ($product->title ?? '');
+
+        $this->queueVariantIdsDeletion($productTitle, [(string)$variant->id]);
+    }
+
+    /**
+     * @param string[] $variantIds
+     */
+    private function queueVariantIdsDeletion(string $productTitle, array $variantIds): void
+    {
+        if ($variantIds === []) {
+            return;
+        }
+
+        Queue::push(new DeleteProductItemsJob([
+            'productTitle' => $productTitle,
+            'variantIds' => $variantIds,
+        ]), queue: $this->queue);
+    }
+
+    /**
+     * @return string[]
+     */
+    private function collectVariantIds(Product $product): array
+    {
+        $variantIds = [];
+
+        foreach ($product->getVariants() as $variant) {
+            if ($variant->id !== null) {
+                $variantIds[] = (string)$variant->id;
+            }
+        }
+
+        return $variantIds;
     }
 }

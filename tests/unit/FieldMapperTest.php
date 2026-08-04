@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace kernpfad\commercedoofinder\tests\unit;
 
 use kernpfad\commercedoofinder\services\FieldMapper;
@@ -56,5 +58,15 @@ class FieldMapperTest extends TestCase
         $result = $this->mapper->mapFields(['brand' => ''], ['brand' => 'Acme']);
 
         self::assertSame([], $result);
+    }
+
+    public function testNormalizesIterableFieldValuesToACommaSeparatedString(): void
+    {
+        $result = $this->mapper->mapFields(
+            ['materials' => 'material'],
+            ['materials' => ['Cotton', 'Wool']],
+        );
+
+        self::assertSame(['material' => 'Cotton, Wool'], $result);
     }
 }

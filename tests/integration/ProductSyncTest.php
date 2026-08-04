@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace kernpfad\commercedoofinder\tests\integration;
 
 /**
@@ -135,6 +137,25 @@ class ProductSyncTest extends TestCase
             [],
             $this->doofinderJobs(),
             'Creating a revision must not queue any Doofinder job.'
+        );
+    }
+
+    public function testDisablingAProductQueuesADeleteJob(): void
+    {
+        $product = $this->createProduct(19.0);
+        \Craft::$app->getDb()->createCommand()->truncateTable('{{%queue}}')->execute();
+
+        $product->enabled = false;
+        self::assertTrue(
+            \Craft::$app->getElements()->saveElement($product),
+            implode(', ', $product->getErrorSummary(true))
+        );
+
+        $descriptions = $this->doofinderJobs();
+
+        self::assertTrue(
+            $this->anyContains($descriptions, 'Removing'),
+            'Disabling a product must queue a delete job. Queue contents: ' . implode(' | ', $descriptions)
         );
     }
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace kernpfad\commercedoofinder\services;
 
 use Craft;
@@ -58,6 +60,9 @@ class DoofinderClient
     private const CONNECT_TIMEOUT_SECONDS = 5;
     private const TOTAL_TIMEOUT_SECONDS = 15;
     private const BULK_TIMEOUT_SECONDS = 60;
+
+    /** Doofinder's documented maximum items per bulk write request. */
+    public const BULK_ITEMS_LIMIT = 100;
 
     public function __construct(
         private readonly string $apiHost,

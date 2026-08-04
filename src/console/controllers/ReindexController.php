@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace kernpfad\commercedoofinder\console\controllers;
 
 use craft\commerce\elements\Product;
 use craft\console\Controller;
 use kernpfad\commercedoofinder\CommerceDoofinder;
+use kernpfad\commercedoofinder\services\DoofinderClient;
 use Throwable;
 use yii\console\ExitCode;
 
@@ -52,7 +55,7 @@ class ReindexController extends Controller
                     $chunk[] = $payload;
                     $itemCount++;
 
-                    if (count($chunk) >= 100) {
+                    if (count($chunk) >= DoofinderClient::BULK_ITEMS_LIMIT) {
                         $client->bulkUpsertItems($chunk);
                         $chunk = [];
                     }
