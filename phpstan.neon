@@ -1,7 +1,11 @@
+includes:
+    - vendor/phpstan/phpstan-phpunit/extension.neon
+
 parameters:
     level: 8
     paths:
         - src
+        - tests/unit
     tmpDir: .phpstan-cache
     scanFiles:
         - vendor/craftcms/cms/src/Craft.php
@@ -18,3 +22,7 @@ parameters:
             - end
         yii\base\ErrorHandler:
             - convertExceptionToError
+    ignoreErrors:
+        -
+            identifier: parameterByRef.type
+            path: tests/unit/DoofinderClientTest.php
