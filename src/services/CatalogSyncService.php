@@ -7,6 +7,8 @@ namespace kernpfad\commercedoofinder\services;
 use craft\base\Element;
 use craft\commerce\elements\Product;
 use craft\commerce\elements\Variant;
+use craft\elements\Asset;
+use craft\elements\db\AssetQuery;
 use craft\helpers\Queue;
 use kernpfad\commercedoofinder\jobs\DeleteProductItemsJob;
 use kernpfad\commercedoofinder\jobs\SyncProductItemsJob;
@@ -31,11 +33,11 @@ use yii\queue\Queue as YiiQueue;
  * variants-not-saved-yet gap on `Product::EVENT_AFTER_SAVE` — a pre-existing
  * issue in that plugin, not fixed here.)
  *
- * `image_link` is deliberately never set automatically — like
- * commerce-klaviyo's `image_full_url`, product images are always a
- * project-specific custom field in Commerce's schema, not something this
- * plugin can read without guessing at a project's field setup. Map an
- * asset field's URL through `$fieldMapping` if you need it populated.
+ * `image_link` is resolved from `$imageFieldHandle` when configured — the
+ * variant's own field value is checked first, falling back to the product's,
+ * so a project can override the image per-variant or just set it once on the
+ * product. Left null (omitted from the payload) when unconfigured, since
+ * this plugin can't guess a project's Assets field handle.
  */
 class CatalogSyncService extends Component
 {
@@ -46,6 +48,8 @@ class CatalogSyncService extends Component
         private readonly ItemPayloadBuilder $payloadBuilder = new ItemPayloadBuilder(),
         private readonly FieldMapper $fieldMapper = new FieldMapper(),
         private readonly array $fieldMapping = [],
+        private readonly ?string $imageFieldHandle = null,
+        private readonly ?string $imageTransformHandle = null,
         private readonly ?YiiQueue $queue = null,
         $config = [],
     ) {
@@ -179,16 +183,70 @@ class CatalogSyncService extends Component
     private function buildVariantPayload(Product $product, Variant $variant): array
     {
         return $this->payloadBuilder->buildItem(
-            (string)$variant->id,
-            $variant->title ?: ($product->title ?? ''),
-            $product->getUrl() ?? '',
-            null,
-            (float)($variant->getPrice() ?? 0.0),
-            $variant->getPromotionalPrice(),
-            (string)$product->id,
-            $variant->id === $product->getDefaultVariant()?->id,
-            $this->resolveCustomFields($product),
+            id: (string)$variant->id,
+            title: $variant->title ?: ($product->title ?? ''),
+            link: $product->getUrl() ?? '',
+            imageLink: $this->resolveImageLink($product, $variant),
+            price: (float)($variant->getPrice() ?? 0.0),
+            salePrice: $variant->getPromotionalPrice(),
+            groupId: (string)$product->id,
+            groupLeader: $variant->id === $product->getDefaultVariant()?->id,
+            availability: $variant->getIsAvailable(),
+            stockQuantity: $variant->inventoryTracked ? $variant->getStock() : null,
+            customFields: $this->resolveCustomFields($product),
         );
+    }
+
+    /**
+     * Resolves `image_link` from {@see $imageFieldHandle} — the variant's
+     * own field value first, falling back to the product's, so a project can
+     * override the image per-variant or just set it once on the product.
+     * Applies {@see $imageTransformHandle} when configured.
+     */
+    private function resolveImageLink(Product $product, Variant $variant): ?string
+    {
+        if ($this->imageFieldHandle === null || $this->imageFieldHandle === '') {
+            return null;
+        }
+
+        $asset = $this->firstAssetFromField($variant) ?? $this->firstAssetFromField($product);
+
+        if ($asset === null) {
+            return null;
+        }
+
+        if ($this->imageTransformHandle !== null && $this->imageTransformHandle !== '') {
+            $url = $asset->getUrl($this->imageTransformHandle);
+
+            if ($url !== null && $url !== '') {
+                return $url;
+            }
+        }
+
+        return $asset->getUrl() ?: null;
+    }
+
+    /**
+     * `getFieldValue()` normally returns an `AssetQuery` for an Assets
+     * field, but eager-loading (`Element::getEagerLoadedElements()`) can
+     * hand back an already-resolved iterable of elements instead — handled
+     * here too so a future eager-loading optimization elsewhere doesn't
+     * silently turn every `image_link` into a no-op.
+     */
+    private function firstAssetFromField(Element $element): ?Asset
+    {
+        $value = $element->getFieldValue((string)$this->imageFieldHandle);
+
+        if ($value instanceof AssetQuery) {
+            $value = $value->one();
+        } elseif (is_iterable($value)) {
+            foreach ($value as $item) {
+                $value = $item;
+                break;
+            }
+        }
+
+        return $value instanceof Asset ? $value : null;
     }
 
     /**

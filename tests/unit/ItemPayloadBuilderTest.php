@@ -52,7 +52,7 @@ class ItemPayloadBuilderTest extends TestCase
 
     public function testMergesCustomFieldsIntoTheItem(): void
     {
-        $item = $this->builder->buildItem('123', 'T', 'L', null, 10.0, null, '1', true, ['brand' => 'Acme']);
+        $item = $this->builder->buildItem('123', 'T', 'L', null, 10.0, null, '1', true, customFields: ['brand' => 'Acme']);
 
         self::assertSame('Acme', $item['brand']);
     }
@@ -64,5 +64,32 @@ class ItemPayloadBuilderTest extends TestCase
 
         self::assertTrue($leader['group_leader']);
         self::assertFalse($notLeader['group_leader']);
+    }
+
+    public function testIncludesAvailabilityOnlyWhenProvided(): void
+    {
+        $available = $this->builder->buildItem('1', 'T', 'L', null, 10.0, null, '1', true, availability: true);
+        $unavailable = $this->builder->buildItem('1', 'T', 'L', null, 10.0, null, '1', true, availability: false);
+        $omitted = $this->builder->buildItem('1', 'T', 'L', null, 10.0, null, '1', true);
+
+        self::assertTrue($available['availability']);
+        self::assertFalse($unavailable['availability']);
+        self::assertArrayNotHasKey('availability', $omitted);
+    }
+
+    public function testIncludesStockQuantityOnlyWhenProvided(): void
+    {
+        $tracked = $this->builder->buildItem('1', 'T', 'L', null, 10.0, null, '1', true, stockQuantity: 5);
+        $untracked = $this->builder->buildItem('1', 'T', 'L', null, 10.0, null, '1', true, stockQuantity: null);
+
+        self::assertSame(5, $tracked['stock_quantity']);
+        self::assertArrayNotHasKey('stock_quantity', $untracked);
+    }
+
+    public function testZeroStockQuantityIsStillIncluded(): void
+    {
+        $outOfStock = $this->builder->buildItem('1', 'T', 'L', null, 10.0, null, '1', true, stockQuantity: 0);
+
+        self::assertSame(0, $outOfStock['stock_quantity']);
     }
 }

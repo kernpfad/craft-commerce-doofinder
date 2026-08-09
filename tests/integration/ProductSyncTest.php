@@ -174,6 +174,31 @@ class ProductSyncTest extends TestCase
         self::assertSame(42.0, $payloads[0]['price']);
     }
 
+    public function testBuildVariantPayloadsIncludesAvailability(): void
+    {
+        $product = $this->createProduct(42.0);
+
+        $payloads = (new CatalogSyncService())->buildVariantPayloads($product);
+
+        self::assertCount(1, $payloads);
+        self::assertTrue($payloads[0]['availability'], 'An enabled, live product/variant should be available.');
+    }
+
+    public function testBuildVariantPayloadsOmitsStockQuantityForInventoryUntrackedVariants(): void
+    {
+        // Inventory tracking is opt-in per variant (Purchasable::$inventoryTracked
+        // defaults to false) — an untracked variant reporting `stock_quantity: 0`
+        // would misrepresent it as out of stock, so it must be omitted entirely.
+        $product = $this->createProduct(42.0);
+        $variant = $product->getVariants()->first();
+        self::assertNotNull($variant);
+        self::assertFalse($variant->inventoryTracked, 'Expected a freshly created variant to be inventory-untracked by default.');
+
+        $payloads = (new CatalogSyncService())->buildVariantPayloads($product);
+
+        self::assertArrayNotHasKey('stock_quantity', $payloads[0]);
+    }
+
     public function testGetSyncQueueReturnsCraftsDefaultQueueByDefault(): void
     {
         $plugin = CommerceDoofinder::getInstance();

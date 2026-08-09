@@ -14,20 +14,22 @@
         ],
     }) }}
 
-    {{ forms.textField({
+    {{ forms.autosuggestField({
         label: "API token"|t('commerce-doofinder'),
-        instructions: "From the Doofinder Admin Panel: Account → API Keys."|t('commerce-doofinder'),
+        instructions: "From the Doofinder Admin Panel: Account → API Keys. Can be an environment variable, e.g. `$DOOFINDER_API_TOKEN`."|t('commerce-doofinder'),
         id: 'apiToken',
         name: 'apiToken',
         value: settings.apiToken,
+        suggestEnvVars: true,
     }) }}
 
-    {{ forms.textField({
+    {{ forms.autosuggestField({
         label: "Search engine hash ID"|t('commerce-doofinder'),
-        instructions: "The target search engine's hash ID (32 hex characters), from the Doofinder Admin Panel."|t('commerce-doofinder'),
+        instructions: "The target search engine's hash ID (32 hex characters), from the Doofinder Admin Panel. Can be an environment variable, e.g. `$DOOFINDER_SEARCH_ENGINE_HASH_ID`."|t('commerce-doofinder'),
         id: 'searchEngineHashId',
         name: 'searchEngineHashId',
         value: settings.searchEngineHashId,
+        suggestEnvVars: true,
     }) }}
 
     {{ forms.textField({
@@ -55,5 +57,22 @@
         name: 'fieldMappingRaw',
         value: settings.fieldMappingRaw,
         rows: 6,
+    }) }}
+
+    {{ forms.textField({
+        label: "Image field handle"|t('commerce-doofinder'),
+        instructions: "Handle of the Assets field (on the product or the variant) whose first asset becomes each item's `image_link`. Checked on the variant first, falling back to the product. Leave empty to omit `image_link`."|t('commerce-doofinder'),
+        id: 'imageFieldHandle',
+        name: 'imageFieldHandle',
+        value: settings.imageFieldHandle,
+        placeholder: 'productImage',
+    }) }}
+
+    {{ forms.textField({
+        label: "Image transform handle"|t('commerce-doofinder'),
+        instructions: "Optional named image transform applied to the asset above before its URL is used. Leave empty to use the asset's original URL."|t('commerce-doofinder'),
+        id: 'imageTransformHandle',
+        name: 'imageTransformHandle',
+        value: settings.imageTransformHandle,
     }) }}
 </div>

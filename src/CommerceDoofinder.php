@@ -38,6 +38,8 @@ class CommerceDoofinder extends Plugin
         $this->set('catalogSync', function() {
             return new CatalogSyncService(
                 fieldMapping: $this->getSettings()->getFieldMapping(),
+                imageFieldHandle: $this->getSettings()->imageFieldHandle,
+                imageTransformHandle: $this->getSettings()->imageTransformHandle,
                 queue: $this->getSyncQueue(),
             );
         });
@@ -125,18 +127,17 @@ class CommerceDoofinder extends Plugin
     public function getDoofinderClient(): ?DoofinderClient
     {
         $settings = $this->getSettings();
+        $apiToken = $settings->getParsedApiToken();
+        $searchEngineHashId = $settings->getParsedSearchEngineHashId();
 
-        if (
-            $settings->apiToken === null || $settings->apiToken === ''
-            || $settings->searchEngineHashId === null || $settings->searchEngineHashId === ''
-        ) {
+        if ($apiToken === null || $searchEngineHashId === null) {
             return null;
         }
 
         return new DoofinderClient(
             $settings->getApiHost(),
-            $settings->apiToken,
-            $settings->searchEngineHashId,
+            $apiToken,
+            $searchEngineHashId,
             $settings->indexName,
         );
     }

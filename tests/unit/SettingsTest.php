@@ -72,6 +72,51 @@ class SettingsTest extends TestCase
         self::assertSame([], $settings->getFieldMapping());
     }
 
+    public function testParsedApiTokenIsNullWhenUnset(): void
+    {
+        $settings = new Settings();
+
+        self::assertNull($settings->getParsedApiToken());
+    }
+
+    public function testParsedApiTokenReturnsThePlainValueWhenItIsNotAnEnvReference(): void
+    {
+        $settings = new Settings();
+        $settings->apiToken = 'plain-token-value';
+
+        self::assertSame('plain-token-value', $settings->getParsedApiToken());
+    }
+
+    public function testParsedApiTokenResolvesAnEnvironmentVariableReference(): void
+    {
+        putenv('DOOFINDER_TEST_API_TOKEN=resolved-token-value');
+        $settings = new Settings();
+        $settings->apiToken = '$DOOFINDER_TEST_API_TOKEN';
+
+        self::assertSame('resolved-token-value', $settings->getParsedApiToken());
+
+        putenv('DOOFINDER_TEST_API_TOKEN');
+    }
+
+    public function testParsedApiTokenIsNullWhenTheReferencedEnvironmentVariableIsNotSet(): void
+    {
+        $settings = new Settings();
+        $settings->apiToken = '$DOOFINDER_TEST_TOKEN_THAT_DOES_NOT_EXIST';
+
+        self::assertNull($settings->getParsedApiToken());
+    }
+
+    public function testParsedSearchEngineHashIdResolvesAnEnvironmentVariableReference(): void
+    {
+        putenv('DOOFINDER_TEST_HASH_ID=resolved-hash-id');
+        $settings = new Settings();
+        $settings->searchEngineHashId = '$DOOFINDER_TEST_HASH_ID';
+
+        self::assertSame('resolved-hash-id', $settings->getParsedSearchEngineHashId());
+
+        putenv('DOOFINDER_TEST_HASH_ID');
+    }
+
     public function testSearchZoneHasAnInValidationRuleRestrictedToTheThreeKnownZones(): void
     {
         $settings = new Settings();

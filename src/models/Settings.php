@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace kernpfad\commercedoofinder\models;
 
 use craft\base\Model;
+use craft\helpers\App;
 
 /**
  * @property-read string $apiHost derived from $searchZone
@@ -24,11 +25,17 @@ class Settings extends Model
 
     /**
      * Doofinder API token (Account → API Keys in the Doofinder Admin Panel).
+     * May be an environment variable reference (`$DOOFINDER_API_TOKEN`) —
+     * resolve through {@see getParsedApiToken()} rather than reading this
+     * raw, so a project's real token never has to be committed to project
+     * config.
      */
     public ?string $apiToken = null;
 
     /**
-     * The target search engine's hash ID (32 hex characters).
+     * The target search engine's hash ID (32 hex characters). Same
+     * environment-variable-alias support as {@see $apiToken} — resolve
+     * through {@see getParsedSearchEngineHashId()}.
      */
     public ?string $searchEngineHashId = null;
 
@@ -51,9 +58,50 @@ class Settings extends Model
      */
     public string $fieldMappingRaw = '';
 
+    /**
+     * Handle of the Craft Assets field (on the product or the variant) whose
+     * first asset's URL becomes each item's `image_link`. Checked on the
+     * variant first, falling back to the product. Leave empty to omit
+     * `image_link` entirely.
+     */
+    public ?string $imageFieldHandle = null;
+
+    /**
+     * Optional named image transform applied to the asset resolved via
+     * {@see $imageFieldHandle} before its URL is used. Ignored when
+     * {@see $imageFieldHandle} isn't set.
+     */
+    public ?string $imageTransformHandle = null;
+
     public function getApiHost(): string
     {
         return "https://{$this->searchZone}-api.doofinder.com";
+    }
+
+    /**
+     * {@see $apiToken}, resolved through {@see App::parseEnv()} so a
+     * `$DOOFINDER_API_TOKEN`-style alias is turned into the real value.
+     * Null when unset or when the referenced environment variable isn't
+     * defined.
+     */
+    public function getParsedApiToken(): ?string
+    {
+        return self::parsedEnvString($this->apiToken);
+    }
+
+    /**
+     * {@see $searchEngineHashId}, resolved the same way as {@see getParsedApiToken()}.
+     */
+    public function getParsedSearchEngineHashId(): ?string
+    {
+        return self::parsedEnvString($this->searchEngineHashId);
+    }
+
+    private static function parsedEnvString(?string $value): ?string
+    {
+        $parsed = App::parseEnv($value);
+
+        return is_string($parsed) && $parsed !== '' ? $parsed : null;
     }
 
     /**
@@ -98,6 +146,7 @@ class Settings extends Model
             [['queueComponentId'], 'required'],
             [['queueComponentId'], 'string'],
             [['fieldMappingRaw'], 'string'],
+            [['imageFieldHandle', 'imageTransformHandle'], 'string'],
         ];
     }
 }
