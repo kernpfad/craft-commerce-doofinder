@@ -14,3 +14,6 @@
 - Fixed: a null product on variant delete could crash job queueing.
 - Added: `FieldValueNormalizer` to flatten Craft field values (assets, options, categories, dates, etc.) into JSON-safe scalars before they are sent to Doofinder.
 - Added: `declare(strict_types=1)` across all plugin and test source files.
+- Added: automatic `image_link` resolution. New `imageFieldHandle` setting (checked on the variant first, falling back to the product) plus an optional `imageTransformHandle` for a named image transform.
+- Added: `availability` and `stock_quantity` on every synced item, sourced from Commerce's own inventory system (`Purchasable::getIsAvailable()` / `getStock()`). Inventory-untracked variants omit `stock_quantity` rather than reporting a misleading `0`.
+- Added: `apiToken` and `searchEngineHashId` now accept environment variable aliases (e.g. `$DOOFINDER_API_TOKEN`), resolved via `craft\helpers\App::parseEnv()`, so real credentials never have to be committed to project config. The settings screen now uses Craft's standard env-var-autosuggest field for both.

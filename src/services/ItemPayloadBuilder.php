@@ -16,6 +16,17 @@ namespace kernpfad\commercedoofinder\services;
 class ItemPayloadBuilder
 {
     /**
+     * @param bool|null $availability whether the variant can currently be
+     *   purchased (already accounts for enabled/draft/out-of-stock status —
+     *   see {@see \craft\commerce\base\Purchasable::getIsAvailable()}). Not
+     *   one of Doofinder's reserved fields, sent as a plain custom field;
+     *   null omits it.
+     * @param int|null $stockQuantity available stock across all inventory
+     *   locations for the current store. Pass null (not `0`) for
+     *   inventory-untracked variants — those aren't meaningfully "0 in
+     *   stock", and a literal 0 would misrepresent them as out of stock.
+     *   Not one of Doofinder's reserved fields, sent as a plain custom
+     *   field; null omits it.
      * @param array<string, mixed> $customFields already resolved from the
      *   merchant's field mapping — merged in as-is, since Doofinder items
      *   accept arbitrary extra keys beyond the reserved ones below.
@@ -30,6 +41,8 @@ class ItemPayloadBuilder
         ?float $salePrice,
         string $groupId,
         bool $groupLeader,
+        ?bool $availability = null,
+        ?int $stockQuantity = null,
         array $customFields = [],
     ): array {
         $item = [
@@ -47,6 +60,14 @@ class ItemPayloadBuilder
 
         if ($salePrice !== null && $salePrice < $price) {
             $item['sale_price'] = $salePrice;
+        }
+
+        if ($availability !== null) {
+            $item['availability'] = $availability;
+        }
+
+        if ($stockQuantity !== null) {
+            $item['stock_quantity'] = $stockQuantity;
         }
 
         return array_merge($item, $customFields);
