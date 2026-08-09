@@ -71,7 +71,7 @@ class FieldValueNormalizer
             return ($title !== null && $title !== '') ? $title : (string)$value->id;
         }
 
-        if (is_array($value) || ($value instanceof Traversable && !$value instanceof ElementInterface)) {
+        if (is_array($value) || $value instanceof Traversable) {
             return $this->normalizeIterable($value);
         }
 
