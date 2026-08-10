@@ -12,7 +12,7 @@ use Throwable;
 use yii\console\ExitCode;
 
 /**
- * `php craft doofinder/reindex` — a full-catalog resync using Doofinder's
+ * `php craft commerce-doofinder/reindex` — a full-catalog resync using Doofinder's
  * documented temporary-index workflow (verified against
  * https://docs.doofinder.com/api-reference/indices/): build a complete,
  * fresh index in a locked staging area, then atomically swap it in for the

@@ -94,6 +94,35 @@ class DoofinderClientTest extends TestCase
         self::assertSame('DELETE', $requests[0]['request']->getMethod());
     }
 
+    public function testGetIndexSendsAGetWithTheCorrectAuthHeaderAndUrlAndDecodesTheResponse(): void
+    {
+        $requests = [];
+        $client = $this->makeClient([
+            new Response(200, [], '{"name":"product","preset":"product"}'),
+        ], $requests);
+
+        $index = $client->getIndex();
+
+        self::assertCount(1, $requests);
+        $request = $requests[0]['request'];
+        self::assertSame('GET', $request->getMethod());
+        self::assertSame(
+            'https://eu1-api.doofinder.com/api/v2/search_engines/hash123/indices/product/',
+            (string)$request->getUri()
+        );
+        self::assertSame('Token test-token', $request->getHeaderLine('Authorization'));
+        self::assertSame(['name' => 'product', 'preset' => 'product'], $index);
+    }
+
+    public function testGetIndexPropagatesErrors(): void
+    {
+        $requests = [];
+        $client = $this->makeClient([new Response(401)], $requests);
+
+        $this->expectException(\GuzzleHttp\Exception\ClientException::class);
+        $client->getIndex();
+    }
+
     public function testBulkUpsertItemsSendsAPostToTheBulkEndpointWithARawArrayBody(): void
     {
         $requests = [];
