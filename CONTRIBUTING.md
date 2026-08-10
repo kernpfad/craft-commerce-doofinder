@@ -50,8 +50,21 @@ Install the plugin into a Craft 5 site through a Composer path repository:
 
 ```sh
 composer require kernpfad/craft-commerce-doofinder:@dev
-php craft plugin/install commerce-klaviyo
+php craft plugin/install commerce-doofinder
 ```
+
+Local checks run automatically via a git hook that `composer install`
+wires up for you (`git config core.hooksPath .githooks`):
+
+- `.githooks/pre-commit` runs `composer check` on every commit that touches
+  PHP/tooling files.
+- `.githooks/pre-push` runs `composer test:integration` if
+  `CRAFT_TEST_SITE_PATH` is set, against the shared local Craft + Commerce
+  site described in `craft-plugin-blueprint`'s `BLUEPRINT.md`:
+
+  ```sh
+  export CRAFT_TEST_SITE_PATH=~/projects/kernpfad/craft-test-site
+  ```
 
 ## Pull requests
 
