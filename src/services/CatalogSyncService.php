@@ -83,12 +83,21 @@ class CatalogSyncService extends Component
      * Whether a product/variant pair should appear in the live Doofinder
      * index for its site. Disabled elements stay syncable (they still fire
      * save events) but must be removed from the index instead of upserted.
+     *
+     * Mirrors `Element::getStatus()`'s own definition of "enabled", which
+     * checks both flags: `enabled` is the global toggle (what a single-site
+     * store's product edit page actually writes), while `getEnabledForSite()`
+     * is the separate per-site override. Checking only the latter misses
+     * every single-site "disable this product" case entirely.
      */
     private function isEnabledForIndex(Product $product, Variant $variant): bool
     {
         $siteId = $product->siteId;
 
-        return $product->getEnabledForSite($siteId) && $variant->getEnabledForSite($siteId);
+        return $product->enabled
+            && $product->getEnabledForSite($siteId)
+            && $variant->enabled
+            && $variant->getEnabledForSite($siteId);
     }
 
     public function syncVariant(Variant $variant): void
@@ -143,7 +152,9 @@ class CatalogSyncService extends Component
      */
     public function removeDisabledProductFromIndex(Product $product): void
     {
-        if (!$this->isSyncable($product) || $product->getEnabledForSite($product->siteId)) {
+        $isEnabled = $product->enabled && $product->getEnabledForSite($product->siteId);
+
+        if (!$this->isSyncable($product) || $isEnabled) {
             return;
         }
 
@@ -160,7 +171,7 @@ class CatalogSyncService extends Component
      */
     public function buildVariantPayloads(Product $product): array
     {
-        if ($product->id === null || !$product->getEnabledForSite($product->siteId)) {
+        if ($product->id === null || !$product->enabled || !$product->getEnabledForSite($product->siteId)) {
             return [];
         }
 
