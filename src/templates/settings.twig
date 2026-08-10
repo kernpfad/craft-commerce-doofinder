@@ -41,6 +41,43 @@
         placeholder: 'product',
     }) }}
 
+    <div id="commerce-doofinder-test" class="field">
+        <button type="button" class="btn" id="commerce-doofinder-test-run">{{ "Test connection"|t('commerce-doofinder') }}</button>
+        <span id="commerce-doofinder-test-result" class="hidden" style="margin-left: 1rem;"></span>
+    </div>
+
+    {% js %}
+    (function () {
+        const btn = document.getElementById('commerce-doofinder-test-run');
+        const result = document.getElementById('commerce-doofinder-test-result');
+        if (!btn || !result) return;
+
+        btn.addEventListener('click', async () => {
+            btn.setAttribute('disabled', 'disabled');
+            result.classList.add('hidden');
+
+            const body = new FormData();
+            body.append(Craft.csrfTokenName, Craft.csrfTokenValue);
+
+            try {
+                const response = await fetch('{{ actionUrl('commerce-doofinder/cp/test/run') }}', {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json' },
+                    body,
+                });
+                const data = await response.json();
+                result.textContent = data.message;
+                result.className = data.success ? 'success' : 'error';
+            } catch (error) {
+                result.textContent = String(error);
+                result.className = 'error';
+            } finally {
+                btn.removeAttribute('disabled');
+            }
+        });
+    })();
+    {% endjs %}
+
     {{ forms.textField({
         label: "Queue component ID"|t('commerce-doofinder'),
         instructions: "The Yii application component this plugin's sync jobs are pushed to. Leave as `queue` to use Craft's own default queue. Set this to a different component ID — defined in `config/app.php`, backed by a real message-queue driver — to isolate Doofinder sync traffic from the rest of the site's queue jobs. Falls back to the default queue if the configured component isn't available."|t('commerce-doofinder'),

@@ -142,6 +142,34 @@ class CommerceDoofinder extends Plugin
         );
     }
 
+    /**
+     * @return array{success: bool, message: string}
+     */
+    public function testConnection(): array
+    {
+        $client = $this->getDoofinderClient();
+
+        if ($client === null) {
+            return [
+                'success' => false,
+                'message' => Craft::t('commerce-doofinder', 'Not fully configured (API token/search engine hash ID).'),
+            ];
+        }
+
+        try {
+            $index = $client->getIndex();
+        } catch (\Throwable $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+
+        return [
+            'success' => true,
+            'message' => Craft::t('commerce-doofinder', 'Connected. Index "{name}" found.', [
+                'name' => $index['name'] ?? $this->getSettings()->indexName,
+            ]),
+        ];
+    }
+
     protected function createSettingsModel(): ?Model
     {
         return new Settings();

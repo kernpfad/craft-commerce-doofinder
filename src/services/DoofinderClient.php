@@ -114,6 +114,26 @@ class DoofinderClient
         }
     }
 
+    /**
+     * Fetches the configured index's own metadata — the lightest documented
+     * read-only call against it (verified against
+     * https://docs.doofinder.com/api-reference/indices/get.md: `GET
+     * .../search_engines/{hashid}/indices/{name}`, same Token auth as every
+     * other call here). Used as a connection test: a 200 confirms the API
+     * token, search engine hash ID and index name are all valid together,
+     * without creating, modifying or deleting anything.
+     *
+     * @return array<string, mixed> the index's `name`/`preset`/`options`/`datasources`
+     */
+    public function getIndex(): array
+    {
+        $response = $this->getHttpClient()->request('GET', $this->indexUrl(''), [
+            'headers' => $this->headers(),
+        ]);
+
+        return json_decode((string)$response->getBody(), true) ?? [];
+    }
+
     public function createTemporaryIndex(): void
     {
         $this->getHttpClient()->request('POST', $this->indexUrl('temp/'), [
