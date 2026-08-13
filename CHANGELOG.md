@@ -23,3 +23,6 @@
 - Added: `sale_price` on items when a variant's promotional price is lower than its base price (was already wired; now documented).
 - Added: last sync/reindex status on the plugin settings screen, persisted via `SyncStatusService`.
 - Added: pending (future post date) and expired products/variants are removed from the index consistently, same as disabled elements.
+- Added: `reindex --if-stale` and `--stale-hours` to skip full reindexes when the catalog was recently rebuilt; cron example and last-reindex timestamp on the settings screen.
+- Added: `CommerceDoofinder::EVENT_MODIFY_ITEM_PAYLOAD` so project code can mutate item payloads before sync.
+- Changed: custom field mapping is edited via an editable table in the control panel (legacy `fieldMappingRaw` lines remain supported).

@@ -24,6 +24,43 @@ use yii\console\ExitCode;
  */
 class ReindexController extends Controller
 {
+    /**
+     * When true, skip the run if the last successful reindex is still within
+     * {@see Settings::$reindexStaleHours} (or `--stale-hours` when passed).
+     */
+    public bool $ifStale = false;
+
+    /**
+     * Override for {@see Settings::$reindexStaleHours} on this invocation only.
+     */
+    public ?int $staleHours = null;
+
+    /**
+     * @return string[]
+     */
+    public function options($actionID): array
+    {
+        $options = parent::options($actionID);
+
+        if ($actionID === 'index') {
+            $options[] = 'ifStale';
+            $options[] = 'staleHours';
+        }
+
+        return $options;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function optionAliases(): array
+    {
+        return array_merge(parent::optionAliases(), [
+            'if-stale' => 'ifStale',
+            'stale-hours' => 'staleHours',
+        ]);
+    }
+
     public function actionIndex(): int
     {
         $plugin = CommerceDoofinder::getInstance();
@@ -40,6 +77,16 @@ class ReindexController extends Controller
             $this->stdout("Commerce Doofinder is not fully configured (API token/search engine hash ID) — aborting.\n");
 
             return ExitCode::CONFIG;
+        }
+
+        $staleHours = $this->staleHours ?? $plugin->getSettings()->reindexStaleHours;
+
+        if ($this->ifStale && !$plugin->syncStatus->isReindexStale($staleHours)) {
+            $last = $plugin->syncStatus->getLastSuccessfulReindexTimestamp();
+            $when = $last !== null ? date('Y-m-d H:i:s', $last) : 'never';
+            $this->stdout("Skipping reindex — last successful reindex at {$when} is still within {$staleHours} hour(s).\n");
+
+            return ExitCode::OK;
         }
 
         $this->stdout("Creating a temporary index...\n");

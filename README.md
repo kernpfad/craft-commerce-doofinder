@@ -26,7 +26,8 @@ php craft plugin/install commerce-doofinder
 - **Categories.** Set `categoriesFieldHandle` to a Categories field on the product, or enable auto-discover to use the first Categories field on the product's field layout. Each related category becomes a Doofinder breadcrumb path (`Parent > Child > Leaf`).
 - **Sale price.** When a variant has a promotional price lower than its base price, `sale_price` is sent automatically (Doofinder's `best_price` field is derived from this on their side).
 - **Availability and stock.** Every item includes `availability` (from Commerce's own `Purchasable::getIsAvailable()` — enabled/draft/out-of-stock-purchasing-allowed all accounted for) and `stock_quantity` (Commerce's aggregated available stock across all inventory locations for the current store) for inventory-tracked variants. Untracked variants omit `stock_quantity` rather than reporting a misleading `0`.
-- **Custom field mapping.** Map any Craft product field handle to any Doofinder item key. Read from the product, applied to every variant of it.
+- **Custom field mapping.** Map any Craft product field handle to any Doofinder item key via an editable table on the settings screen. Read from the product, applied to every variant of it.
+- **Payload mutator event.** Register a listener on `CommerceDoofinder::EVENT_MODIFY_ITEM_PAYLOAD` to adjust item payloads before they are queued or bulk-indexed.
 - **Configurable queue component.** Route sync jobs to a dedicated Yii queue component instead of Craft's default queue. Falls back to the default queue, logged rather than thrown, if the configured component is unavailable.
 - **Connection test.** A "Test connection" button on the settings screen (and `php craft commerce-doofinder/test`) fetches the configured index's own metadata to confirm the API token, search engine hash ID and index name are all valid together — no side effects on the live index.
 - **Last sync / reindex status.** The settings screen shows whether the most recent queue sync or full reindex succeeded or failed, with the error message when applicable.
@@ -45,7 +46,8 @@ Under **Settings → Plugins → Commerce Doofinder**:
 | `searchEngineHashId` | `null` | Target search engine's hash ID, 32 hex characters. Can be an environment variable alias, e.g. `$DOOFINDER_SEARCH_ENGINE_HASH_ID`. |
 | `indexName` | `product` | The index products and variants are synced into. |
 | `queueComponentId` | `queue` | Yii application component the sync jobs are pushed to. |
-| `fieldMappingRaw` | empty | Custom field mapping, one `handle=doofinderKey` per line. |
+| `fieldMapping` | empty | Custom field mapping rows (Craft handle → Doofinder key). Legacy `fieldMappingRaw` lines are still read when rows are empty. |
+| `reindexStaleHours` | `24` | Staleness threshold for `reindex --if-stale` (hours). `0` never skips. |
 | `imageFieldHandle` | `null` | Assets field handle (product or variant) resolved into `image_link`. |
 | `imageTransformHandle` | `null` | Optional named image transform applied to the asset above. |
 | `categoriesFieldHandle` | `null` | Categories field handle on the product resolved into Doofinder `categories` paths. |
@@ -56,7 +58,36 @@ Under **Settings → Plugins → Commerce Doofinder**:
 | Command | Purpose |
 |---|---|
 | `php craft commerce-doofinder/reindex` | Full zero-downtime catalog reindex. |
+| `php craft commerce-doofinder/reindex --if-stale` | Reindex only when the last successful full reindex is older than `reindexStaleHours` (or `--stale-hours=N`). |
 | `php craft commerce-doofinder/test` | Verifies the API token, search engine hash ID and index name by fetching the index's own metadata — no side effects. |
+
+### Scheduled reindex
+
+Real-time sync covers day-to-day edits; schedule a nightly full reindex as a safety net:
+
+```cron
+0 3 * * * /usr/bin/php /path/to/craft commerce-doofinder/reindex --if-stale
+```
+
+The plugin settings screen shows the last successful full reindex and the recommended cron entry.
+
+## Customizing item payloads
+
+```php
+use kernpfad\commercedoofinder\CommerceDoofinder;
+use kernpfad\commercedoofinder\events\ModifyItemPayloadEvent;
+use yii\base\Event;
+
+Event::on(
+    CommerceDoofinder::class,
+    CommerceDoofinder::EVENT_MODIFY_ITEM_PAYLOAD,
+    function(ModifyItemPayloadEvent $event) {
+        $event->payload['custom_label'] = 'Featured';
+    }
+);
+```
+
+The event fires for every variant payload before it is queued or included in a bulk reindex. Modify `$event->payload` in place.
 
 ## Limitations
 
