@@ -10,9 +10,12 @@ use craft\commerce\elements\Variant;
 use craft\elements\Asset;
 use craft\elements\db\AssetQuery;
 use craft\helpers\Queue;
+use kernpfad\commercedoofinder\CommerceDoofinder;
+use kernpfad\commercedoofinder\events\ModifyItemPayloadEvent;
 use kernpfad\commercedoofinder\jobs\DeleteProductItemsJob;
 use kernpfad\commercedoofinder\jobs\SyncProductItemsJob;
 use yii\base\Component;
+use yii\base\Event;
 use yii\queue\Queue as YiiQueue;
 
 /**
@@ -41,6 +44,8 @@ use yii\queue\Queue as YiiQueue;
  */
 class CatalogSyncService extends Component
 {
+    private const ELEMENT_STATUS_LIVE = 'live';
+
     /**
      * @param array<string, string> $fieldMapping craftFieldHandle => doofinderFieldKey
      */
@@ -115,7 +120,7 @@ class CatalogSyncService extends Component
 
     private function isLiveForIndex(Element $element): bool
     {
-        return $element->getStatus() === Element::STATUS_LIVE;
+        return $element->getStatus() === self::ELEMENT_STATUS_LIVE;
     }
 
     public function syncVariant(Variant $variant): void
@@ -215,7 +220,7 @@ class CatalogSyncService extends Component
      */
     private function buildVariantPayload(Product $product, Variant $variant): array
     {
-        return $this->payloadBuilder->buildItem(
+        $payload = $this->payloadBuilder->buildItem(
             id: (string)$variant->id,
             title: $variant->title ?: ($product->title ?? ''),
             link: $product->getUrl() ?? '',
@@ -229,6 +234,29 @@ class CatalogSyncService extends Component
             categories: $this->categoryResolver->resolveForProduct($product),
             customFields: $this->resolveCustomFields($product),
         );
+
+        return $this->modifyPayload($payload, $product, $variant);
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @return array<string, mixed>
+     */
+    private function modifyPayload(array $payload, Product $product, Variant $variant): array
+    {
+        if (!Event::hasHandlers(CommerceDoofinder::class, CommerceDoofinder::EVENT_MODIFY_ITEM_PAYLOAD)) {
+            return $payload;
+        }
+
+        $event = new ModifyItemPayloadEvent([
+            'payload' => $payload,
+            'product' => $product,
+            'variant' => $variant,
+        ]);
+
+        Event::trigger(CommerceDoofinder::class, CommerceDoofinder::EVENT_MODIFY_ITEM_PAYLOAD, $event);
+
+        return $event->payload;
     }
 
     /**

@@ -9,7 +9,6 @@ use craft\helpers\App;
 
 /**
  * @property-read string $apiHost derived from $searchZone
- * @property-read array<string, string> $fieldMapping craftFieldHandle => doofinderFieldKey, decoded from fieldMappingRaw
  */
 class Settings extends Model
 {
@@ -87,6 +86,22 @@ class Settings extends Model
      */
     public bool $categoriesAutoDiscover = false;
 
+    /**
+     * When {@see ReindexController::$ifStale} is used, skip the run if the
+     * last successful full reindex is newer than this many hours. `0` means
+     * never skip (always treat the index as stale).
+     */
+    public int $reindexStaleHours = 24;
+
+    /**
+     * Editable-table storage for custom field mappings. Kept in sync with
+     * {@see $fieldMappingRaw} for backward compatibility with existing
+     * project-config values.
+     *
+     * @var array<int, array{craftFieldHandle?: string, doofinderFieldKey?: string}>
+     */
+    public array $fieldMappingRows = [];
+
     public function getApiHost(): string
     {
         return "https://{$this->searchZone}-api.doofinder.com";
@@ -123,9 +138,89 @@ class Settings extends Model
      */
     public function getFieldMapping(): array
     {
+        if ($this->fieldMappingRows !== []) {
+            return self::mappingFromRows($this->fieldMappingRows);
+        }
+
+        return self::mappingFromRaw($this->fieldMappingRaw);
+    }
+
+    /**
+     * @return array<int, array{craftFieldHandle: string, doofinderFieldKey: string}>
+     */
+    public function getFieldMappingRows(): array
+    {
+        if ($this->fieldMappingRows !== []) {
+            return array_map(
+                fn(array $row): array => [
+                    'craftFieldHandle' => (string)($row['craftFieldHandle'] ?? ''),
+                    'doofinderFieldKey' => (string)($row['doofinderFieldKey'] ?? ''),
+                ],
+                $this->fieldMappingRows,
+            );
+        }
+
+        $rows = [];
+
+        foreach (self::mappingFromRaw($this->fieldMappingRaw) as $craftFieldHandle => $doofinderFieldKey) {
+            $rows[] = [
+                'craftFieldHandle' => $craftFieldHandle,
+                'doofinderFieldKey' => $doofinderFieldKey,
+            ];
+        }
+
+        return $rows;
+    }
+
+    public function beforeValidate(): bool
+    {
+        $this->fieldMappingRaw = $this->fieldMappingRows !== []
+            ? self::rawFromRows($this->fieldMappingRows)
+            : '';
+
+        return parent::beforeValidate();
+    }
+
+    /**
+     * Normalizes editable-table POST data — an empty table can arrive as `''`.
+     *
+     * @param array<int, array{craftFieldHandle?: string, doofinderFieldKey?: string}>|string|null $value
+     */
+    public function setFieldMappingRows(array|string|null $value): void
+    {
+        $this->fieldMappingRows = is_array($value) ? $value : [];
+    }
+
+    /**
+     * @param array<int, array{craftFieldHandle?: string, doofinderFieldKey?: string}> $rows
+     * @return array<string, string>
+     */
+    private static function mappingFromRows(array $rows): array
+    {
         $mapping = [];
 
-        foreach (preg_split('/\r\n|\r|\n/', $this->fieldMappingRaw) ?: [] as $line) {
+        foreach ($rows as $row) {
+            $fieldHandle = trim((string)($row['craftFieldHandle'] ?? ''));
+            $doofinderKey = trim((string)($row['doofinderFieldKey'] ?? ''));
+
+            if ($fieldHandle === '' || $doofinderKey === '') {
+                continue;
+            }
+
+            $mapping[$fieldHandle] = $doofinderKey;
+        }
+
+        return $mapping;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private static function mappingFromRaw(string $raw): array
+    {
+        $mapping = [];
+
+        foreach (preg_split('/\r\n|\r|\n/', $raw) ?: [] as $line) {
             $line = trim($line);
 
             if ($line === '' || !str_contains($line, '=')) {
@@ -147,6 +242,20 @@ class Settings extends Model
     }
 
     /**
+     * @param array<int, array{craftFieldHandle?: string, doofinderFieldKey?: string}> $rows
+     */
+    private static function rawFromRows(array $rows): string
+    {
+        $lines = [];
+
+        foreach (self::mappingFromRows($rows) as $fieldHandle => $doofinderKey) {
+            $lines[] = "{$fieldHandle}={$doofinderKey}";
+        }
+
+        return implode("\n", $lines);
+    }
+
+    /**
      * @return array<int, array<array-key, mixed>>
      */
     protected function defineRules(): array
@@ -160,6 +269,8 @@ class Settings extends Model
             [['queueComponentId'], 'required'],
             [['queueComponentId'], 'string'],
             [['fieldMappingRaw'], 'string'],
+            [['fieldMappingRows'], 'safe'],
+            [['reindexStaleHours'], 'integer', 'min' => 0],
             [['imageFieldHandle', 'imageTransformHandle', 'categoriesFieldHandle'], 'string'],
             [['categoriesAutoDiscover'], 'boolean'],
         ];

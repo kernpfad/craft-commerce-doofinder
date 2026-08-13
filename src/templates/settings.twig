@@ -87,13 +87,28 @@
         placeholder: 'queue',
     }) }}
 
-    {{ forms.textareaField({
+    {{ forms.editableTableField({
         label: "Custom field mapping"|t('commerce-doofinder'),
-        instructions: "One mapping per line, as `craftFieldHandle=doofinderFieldKey`. For example: `brand=brand`. Read from the product (applied to every variant of that product). Anything not listed here is never sent to Doofinder."|t('commerce-doofinder'),
-        id: 'fieldMappingRaw',
-        name: 'fieldMappingRaw',
-        value: settings.fieldMappingRaw,
-        rows: 6,
+        instructions: "Map Craft product field handles to Doofinder item keys. Read from the product, applied to every variant of that product. Anything not listed here is never sent to Doofinder."|t('commerce-doofinder'),
+        id: 'fieldMappingRows',
+        name: 'fieldMappingRows',
+        cols: {
+            craftFieldHandle: {
+                heading: "Craft field handle"|t('commerce-doofinder'),
+                type: 'singleline',
+                placeholder: 'brand',
+            },
+            doofinderFieldKey: {
+                heading: "Doofinder field key"|t('commerce-doofinder'),
+                type: 'singleline',
+                placeholder: 'brand',
+            },
+        },
+        rows: settings.getFieldMappingRows(),
+        allowAdd: true,
+        allowDelete: true,
+        allowReorder: true,
+        errors: settings.getErrors('fieldMappingRows'),
     }) }}
 
     {{ forms.textField({
@@ -129,6 +144,30 @@
         name: 'categoriesAutoDiscover',
         on: settings.categoriesAutoDiscover,
     }) }}
+
+    {{ forms.textField({
+        label: "Reindex stale threshold (hours)"|t('commerce-doofinder'),
+        instructions: "Used by `php craft commerce-doofinder/reindex --if-stale`. Skip the run when the last successful reindex is newer than this many hours. Set to `0` to never skip."|t('commerce-doofinder'),
+        id: 'reindexStaleHours',
+        name: 'reindexStaleHours',
+        value: settings.reindexStaleHours,
+        type: 'number',
+    }) }}
+
+    <div class="field">
+        <div class="heading">
+            <label>{{ "Scheduled full reindex"|t('commerce-doofinder') }}</label>
+        </div>
+        <div class="instructions">
+            <p>{{ "Real-time sync covers day-to-day edits; schedule a full reindex as a safety net (e.g. nightly). Example cron entry (adjust the path to your project):"|t('commerce-doofinder') }}</p>
+            <pre class="code" style="white-space: pre-wrap;">0 3 * * * /usr/bin/php /path/to/craft commerce-doofinder/reindex --if-stale</pre>
+            {% if lastReindexTimestamp %}
+                <p>{{ "Last successful full reindex: {date}."|t('commerce-doofinder', { date: lastReindexTimestamp|date('short') }) }}</p>
+            {% else %}
+                <p>{{ "No successful full reindex recorded yet."|t('commerce-doofinder') }}</p>
+            {% endif %}
+        </div>
+    </div>
 
     {% if lastSyncStatus %}
         <div class="field">

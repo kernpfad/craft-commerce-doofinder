@@ -7,6 +7,7 @@ namespace kernpfad\commercedoofinder\tests\unit;
 use craft\elements\Category;
 use craft\elements\db\CategoryQuery;
 use kernpfad\commercedoofinder\services\CategoryPathBuilder;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 class CategoryPathBuilderTest extends TestCase
@@ -20,12 +21,8 @@ class CategoryPathBuilderTest extends TestCase
 
     public function testBuildsAncestorBreadcrumbPaths(): void
     {
-        $parent = $this->createConfiguredMock(Category::class, ['title' => 'Clothes']);
-        $child = $this->createConfiguredMock(Category::class, ['title' => 'Hoodies']);
-
-        $ancestorQuery = $this->createMock(CategoryQuery::class);
-        $ancestorQuery->method('all')->willReturn([$parent]);
-        $child->method('getAncestors')->willReturn($ancestorQuery);
+        $parent = $this->categoryWithAncestors('Clothes', []);
+        $child = $this->categoryWithAncestors('Hoodies', [$parent]);
 
         self::assertSame('Clothes > Hoodies', $this->builder->buildPath($child));
     }
@@ -47,10 +44,13 @@ class CategoryPathBuilderTest extends TestCase
 
     /**
      * @param Category[] $ancestors
+     * @return Category&MockObject
      */
     private function categoryWithAncestors(string $title, array $ancestors): Category
     {
-        $category = $this->createConfiguredMock(Category::class, ['title' => $title]);
+        $category = $this->createMock(Category::class);
+        $category->title = $title;
+
         $ancestorQuery = $this->createMock(CategoryQuery::class);
         $ancestorQuery->method('all')->willReturn($ancestors);
         $category->method('getAncestors')->willReturn($ancestorQuery);

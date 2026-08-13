@@ -54,11 +54,16 @@ Umgesetzt in dieser Iteration (P1):
 
 ### P2
 
-| ID | Klasse | Item |
-|---|---|---|
-| DF-09 | D | Cron-freundlicher Schedule-Hinweis + optional `reindex --if-stale` |
-| DF-10 | D | Payload-Mutator Events |
-| DF-11 | B | Mapping-UI (Zeilen statt Freitext) |
+| ID | Klasse | Item | Status |
+|---|---|---|---|
+| ~~DF-09~~ | D | Cron-freundlicher Schedule-Hinweis + optional `reindex --if-stale` | ✅ erledigt |
+| ~~DF-10~~ | D | Payload-Mutator Events | ✅ erledigt |
+| ~~DF-11~~ | B | Mapping-UI (Zeilen statt Freitext) | ✅ erledigt |
+
+Umgesetzt in dieser Iteration (P2):
+- **DF-09:** `reindexStaleHours` Setting, `--if-stale`/`--stale-hours` CLI-Flags, Cron-Beispiel + letzter Reindex-Zeitstempel auf der Settings-Seite.
+- **DF-10:** `CommerceDoofinder::EVENT_MODIFY_ITEM_PAYLOAD` + `ModifyItemPayloadEvent` vor Queue/Bulk-Index.
+- **DF-11:** `forms.editableTableField` für Field Mapping; `fieldMapping`-Array bleibt mit `fieldMappingRaw` abwärtskompatibel.
 
 ### Nicht tun
 
@@ -69,13 +74,13 @@ Umgesetzt in dieser Iteration (P1):
 
 ## Agent-Prompt (kopieren)
 
-> P0 (DF-01–DF-04) und P1 (DF-05–DF-08) sind komplett erledigt (siehe Status oben). Für die nächste Iteration eignen sich aus P2: DF-09 (Cron/`reindex --if-stale`), DF-10 (Payload-Mutator Events) oder DF-11 (Mapping-UI).
+> P0–P2 sind komplett erledigt (siehe Status oben). Die Roadmap ist abgeschlossen — offene Wünsche bitte als GitHub Issues.
 
 ```markdown
 Du arbeitest im Repo `kernpfad/craft-commerce-doofinder` (Craft 5 / Commerce 5).
 
 ## Ziel
-P0 (DF-01–DF-04) und P1 (DF-05–DF-08) sind erledigt. Payload-Builder, Settings, CatalogSyncService
+P0–P2 sind erledigt. Payload-Builder, Settings, CatalogSyncService
 und den bestehenden Connection-Test (`commerce-doofinder/test`) nicht regressieren.
 
 ## Kontext

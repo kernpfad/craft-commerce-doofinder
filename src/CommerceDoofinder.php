@@ -26,6 +26,12 @@ use yii\queue\Queue as YiiQueue;
  */
 class CommerceDoofinder extends Plugin
 {
+    /**
+     * {@see ModifyItemPayloadEvent} — fired for every variant payload before
+     * it is queued or included in a bulk reindex.
+     */
+    public const EVENT_MODIFY_ITEM_PAYLOAD = 'modifyItemPayload';
+
     public string $schemaVersion = '1.0.0';
     public bool $hasCpSection = false;
     public bool $hasCpSettings = true;
@@ -191,6 +197,7 @@ class CommerceDoofinder extends Plugin
         return Craft::$app->getView()->renderTemplate('commerce-doofinder/settings.twig', [
             'settings' => $this->getSettings(),
             'lastSyncStatus' => $this->syncStatus->getLastStatus(),
+            'lastReindexTimestamp' => $this->syncStatus->getLastSuccessfulReindexTimestamp(),
         ]);
     }
 }

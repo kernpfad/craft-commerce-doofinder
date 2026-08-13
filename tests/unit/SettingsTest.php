@@ -137,4 +137,50 @@ class SettingsTest extends TestCase
         self::assertNotNull($zoneRule, 'Expected an "in" rule covering searchZone.');
         self::assertSame(['eu1', 'us1', 'ap1'], $zoneRule['range']);
     }
+
+    public function testFieldMappingRowsAreBuiltFromLegacyRawLines(): void
+    {
+        $settings = new Settings();
+        $settings->fieldMappingRaw = "brand=brand\nmaterial=material";
+
+        self::assertSame(
+            [
+                ['craftFieldHandle' => 'brand', 'doofinderFieldKey' => 'brand'],
+                ['craftFieldHandle' => 'material', 'doofinderFieldKey' => 'material'],
+            ],
+            $settings->getFieldMappingRows(),
+        );
+    }
+
+    public function testSetFieldMappingRowsUpdatesTheLegacyRawStorage(): void
+    {
+        $settings = new Settings();
+        $settings->fieldMappingRows = [
+            ['craftFieldHandle' => 'brand', 'doofinderFieldKey' => 'brand'],
+            ['craftFieldHandle' => '', 'doofinderFieldKey' => 'ignored'],
+        ];
+        self::assertTrue($settings->beforeValidate());
+
+        self::assertSame('brand=brand', $settings->fieldMappingRaw);
+        self::assertSame(['brand' => 'brand'], $settings->getFieldMapping());
+    }
+
+    public function testEmptyFieldMappingClearsLegacyRawStorage(): void
+    {
+        $settings = new Settings();
+        $settings->fieldMappingRaw = 'brand=brand';
+        $settings->fieldMappingRows = [];
+        self::assertTrue($settings->beforeValidate());
+
+        self::assertSame('', $settings->fieldMappingRaw);
+        self::assertSame([], $settings->getFieldMapping());
+    }
+
+    public function testEmptyStringFieldMappingRowsAreNormalizedToAnEmptyArray(): void
+    {
+        $settings = new Settings();
+        $settings->setFieldMappingRows('');
+
+        self::assertSame([], $settings->fieldMappingRows);
+    }
 }
