@@ -174,15 +174,21 @@ class Settings extends Model
 
     public function beforeValidate(): bool
     {
-        if (!is_array($this->fieldMappingRows)) {
-            $this->fieldMappingRows = [];
-        }
-
         $this->fieldMappingRaw = $this->fieldMappingRows !== []
             ? self::rawFromRows($this->fieldMappingRows)
             : '';
 
         return parent::beforeValidate();
+    }
+
+    /**
+     * Normalizes editable-table POST data — an empty table can arrive as `''`.
+     *
+     * @param array<int, array{craftFieldHandle?: string, doofinderFieldKey?: string}>|string|null $value
+     */
+    public function setFieldMappingRows(array|string|null $value): void
+    {
+        $this->fieldMappingRows = is_array($value) ? $value : [];
     }
 
     /**
