@@ -112,4 +112,48 @@
         name: 'imageTransformHandle',
         value: settings.imageTransformHandle,
     }) }}
+
+    {{ forms.textField({
+        label: "Categories field handle"|t('commerce-doofinder'),
+        instructions: "Handle of the Categories field on the product whose related categories become each item's Doofinder `categories` paths (`Parent > Child > Leaf`). Leave empty to omit categories unless auto-discover is enabled below."|t('commerce-doofinder'),
+        id: 'categoriesFieldHandle',
+        name: 'categoriesFieldHandle',
+        value: settings.categoriesFieldHandle,
+        placeholder: 'productCategories',
+    }) }}
+
+    {{ forms.lightswitchField({
+        label: "Auto-discover categories field"|t('commerce-doofinder'),
+        instructions: "When enabled and no categories field handle is set above, the first Categories field on the product's field layout is used automatically."|t('commerce-doofinder'),
+        id: 'categoriesAutoDiscover',
+        name: 'categoriesAutoDiscover',
+        on: settings.categoriesAutoDiscover,
+    }) }}
+
+    {% if lastSyncStatus %}
+        <div class="field">
+            <div class="heading">
+                <label>{{ "Last sync / reindex status"|t('commerce-doofinder') }}</label>
+            </div>
+            <div class="instructions">
+                <p>
+                    {% if lastSyncStatus.success %}
+                        <span class="success">{{ "Last {operation} succeeded on {date}."|t('commerce-doofinder', {
+                            operation: lastSyncStatus.operation,
+                            date: lastSyncStatus.timestamp|date('short'),
+                        }) }}</span>
+                    {% else %}
+                        <span class="error">{{ "Last {operation} failed on {date}: {message}"|t('commerce-doofinder', {
+                            operation: lastSyncStatus.operation,
+                            date: lastSyncStatus.timestamp|date('short'),
+                            message: lastSyncStatus.message,
+                        }) }}</span>
+                        {% if lastSyncStatus.detail %}
+                            <br><code>{{ lastSyncStatus.detail }}</code>
+                        {% endif %}
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    {% endif %}
 </div>

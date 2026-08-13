@@ -13,12 +13,15 @@ use craft\commerce\elements\Variant;
 use craft\events\ModelEvent;
 use kernpfad\commercedoofinder\models\Settings;
 use kernpfad\commercedoofinder\services\CatalogSyncService;
+use kernpfad\commercedoofinder\services\CategoryResolver;
 use kernpfad\commercedoofinder\services\DoofinderClient;
+use kernpfad\commercedoofinder\services\SyncStatusService;
 use yii\base\Event;
 use yii\queue\Queue as YiiQueue;
 
 /**
  * @property CatalogSyncService $catalogSync
+ * @property SyncStatusService $syncStatus
  * @method Settings getSettings()
  */
 class CommerceDoofinder extends Plugin
@@ -36,13 +39,21 @@ class CommerceDoofinder extends Plugin
         }
 
         $this->set('catalogSync', function() {
+            $settings = $this->getSettings();
+
             return new CatalogSyncService(
-                fieldMapping: $this->getSettings()->getFieldMapping(),
-                imageFieldHandle: $this->getSettings()->imageFieldHandle,
-                imageTransformHandle: $this->getSettings()->imageTransformHandle,
+                categoryResolver: new CategoryResolver(
+                    fieldHandle: $settings->categoriesFieldHandle,
+                    autoDiscover: $settings->categoriesAutoDiscover,
+                ),
+                fieldMapping: $settings->getFieldMapping(),
+                imageFieldHandle: $settings->imageFieldHandle,
+                imageTransformHandle: $settings->imageTransformHandle,
                 queue: $this->getSyncQueue(),
             );
         });
+
+        $this->set('syncStatus', fn() => new SyncStatusService());
 
         // Deliberately on Variant, not Product: verified against a real save
         // that a product's variants aren't persisted yet (no id, and a fresh
@@ -57,7 +68,7 @@ class CommerceDoofinder extends Plugin
             function(ModelEvent $event) {
                 /** @var Product $product */
                 $product = $event->sender;
-                $this->catalogSync->removeDisabledProductFromIndex($product);
+                $this->catalogSync->syncProductPublishState($product);
             }
         );
 
@@ -179,6 +190,7 @@ class CommerceDoofinder extends Plugin
     {
         return Craft::$app->getView()->renderTemplate('commerce-doofinder/settings.twig', [
             'settings' => $this->getSettings(),
+            'lastSyncStatus' => $this->syncStatus->getLastStatus(),
         ]);
     }
 }

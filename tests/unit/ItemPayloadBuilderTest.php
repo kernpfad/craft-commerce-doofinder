@@ -92,4 +92,23 @@ class ItemPayloadBuilderTest extends TestCase
 
         self::assertSame(0, $outOfStock['stock_quantity']);
     }
+
+    public function testIncludesCategoriesOnlyWhenProvided(): void
+    {
+        $withCategories = $this->builder->buildItem(
+            '1',
+            'T',
+            'L',
+            null,
+            10.0,
+            null,
+            '1',
+            true,
+            categories: ['Clothes > Hoodies', 'Sale'],
+        );
+        $withoutCategories = $this->builder->buildItem('1', 'T', 'L', null, 10.0, null, '1', true);
+
+        self::assertSame(['Clothes > Hoodies', 'Sale'], $withCategories['categories']);
+        self::assertArrayNotHasKey('categories', $withoutCategories);
+    }
 }

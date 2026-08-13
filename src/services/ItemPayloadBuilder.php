@@ -27,6 +27,9 @@ class ItemPayloadBuilder
      *   stock", and a literal 0 would misrepresent them as out of stock.
      *   Not one of Doofinder's reserved fields, sent as a plain custom
      *   field; null omits it.
+     * @param string[]|null $categories Doofinder category breadcrumb paths
+     *   (`Parent > Child > Leaf`) when the index uses the product preset; null
+     *   omits the field.
      * @param array<string, mixed> $customFields already resolved from the
      *   merchant's field mapping — merged in as-is, since Doofinder items
      *   accept arbitrary extra keys beyond the reserved ones below.
@@ -43,6 +46,7 @@ class ItemPayloadBuilder
         bool $groupLeader,
         ?bool $availability = null,
         ?int $stockQuantity = null,
+        ?array $categories = null,
         array $customFields = [],
     ): array {
         $item = [
@@ -68,6 +72,10 @@ class ItemPayloadBuilder
 
         if ($stockQuantity !== null) {
             $item['stock_quantity'] = $stockQuantity;
+        }
+
+        if ($categories !== null && $categories !== []) {
+            $item['categories'] = $categories;
         }
 
         return array_merge($item, $customFields);

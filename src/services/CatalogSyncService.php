@@ -47,6 +47,7 @@ class CatalogSyncService extends Component
     public function __construct(
         private readonly ItemPayloadBuilder $payloadBuilder = new ItemPayloadBuilder(),
         private readonly FieldMapper $fieldMapper = new FieldMapper(),
+        private readonly CategoryResolver $categoryResolver = new CategoryResolver(),
         private readonly array $fieldMapping = [],
         private readonly ?string $imageFieldHandle = null,
         private readonly ?string $imageTransformHandle = null,
@@ -100,6 +101,23 @@ class CatalogSyncService extends Component
             && $variant->getEnabledForSite($siteId);
     }
 
+    /**
+     * Whether a product/variant should be upserted into the live index right
+     * now — enabled *and* live (not pending a future post date or past its
+     * expiry date). Mirrors Craft's own {@see Element::getStatus()} rules.
+     */
+    private function isIndexable(Product $product, Variant $variant): bool
+    {
+        return $this->isEnabledForIndex($product, $variant)
+            && $this->isLiveForIndex($product)
+            && $this->isLiveForIndex($variant);
+    }
+
+    private function isLiveForIndex(Element $element): bool
+    {
+        return $element->getStatus() === Element::STATUS_LIVE;
+    }
+
     public function syncVariant(Variant $variant): void
     {
         if (!$this->isSyncable($variant)) {
@@ -112,7 +130,7 @@ class CatalogSyncService extends Component
             return;
         }
 
-        if (!$this->isEnabledForIndex($product, $variant)) {
+        if (!$this->isIndexable($product, $variant)) {
             $this->queueVariantDeletion($variant, $product);
 
             return;
@@ -146,39 +164,43 @@ class CatalogSyncService extends Component
     }
 
     /**
-     * When a whole product is disabled, Commerce saves the product element
-     * but does not necessarily fire a separate Variant::EVENT_AFTER_SAVE for
-     * every variant — so each variant's item must be removed here.
+     * Removes every variant when the product itself is disabled, pending or
+     * expired. Commerce saves the product element without necessarily firing
+     * a separate Variant::EVENT_AFTER_SAVE per variant — the same gap as for
+     * disabled products. Live variants are synced by their own save events.
      */
-    public function removeDisabledProductFromIndex(Product $product): void
+    public function syncProductPublishState(Product $product): void
     {
-        $isEnabled = $product->enabled && $product->getEnabledForSite($product->siteId);
-
-        if (!$this->isSyncable($product) || $isEnabled) {
+        if (!$this->isSyncable($product)) {
             return;
         }
 
-        $this->queueVariantIdsDeletion($product->title ?? '', $this->collectVariantIds($product));
+        $siteId = $product->siteId;
+        $productEnabled = $product->enabled && $product->getEnabledForSite($siteId);
+
+        if (!$productEnabled || !$this->isLiveForIndex($product)) {
+            $this->queueVariantIdsDeletion($product->title ?? '', $this->collectVariantIds($product));
+        }
     }
 
     /**
-     * One Doofinder item payload per variant of `$product`, read directly
-     * (not queued) — used by the full-reindex console command, which reads
-     * already-saved products fresh from the database (not reacting to an
-     * in-flight save), so every variant's ID is reliably already there.
-     *
      * @return array<int, array<string, mixed>>
      */
     public function buildVariantPayloads(Product $product): array
     {
-        if ($product->id === null || !$product->enabled || !$product->getEnabledForSite($product->siteId)) {
+        if (
+            $product->id === null
+            || !$product->enabled
+            || !$product->getEnabledForSite($product->siteId)
+            || !$this->isLiveForIndex($product)
+        ) {
             return [];
         }
 
         $variantPayloads = [];
 
         foreach ($product->getVariants() as $variant) {
-            if ($variant->id === null || !$this->isEnabledForIndex($product, $variant)) {
+            if ($variant->id === null || !$this->isIndexable($product, $variant)) {
                 continue;
             }
 
@@ -204,6 +226,7 @@ class CatalogSyncService extends Component
             groupLeader: $variant->id === $product->getDefaultVariant()?->id,
             availability: $variant->getIsAvailable(),
             stockQuantity: $variant->inventoryTracked ? $variant->getStock() : null,
+            categories: $this->categoryResolver->resolveForProduct($product),
             customFields: $this->resolveCustomFields($product),
         );
     }

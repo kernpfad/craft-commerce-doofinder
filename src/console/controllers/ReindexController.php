@@ -8,6 +8,7 @@ use craft\commerce\elements\Product;
 use craft\console\Controller;
 use kernpfad\commercedoofinder\CommerceDoofinder;
 use kernpfad\commercedoofinder\services\DoofinderClient;
+use kernpfad\commercedoofinder\services\SyncStatusService;
 use Throwable;
 use yii\console\ExitCode;
 
@@ -70,10 +71,17 @@ class ReindexController extends Controller
             $client->replaceIndexWithTemporary();
             $this->stdout("Done. {$itemCount} items indexed.\n");
 
+            $plugin->syncStatus->recordSuccess(SyncStatusService::OPERATION_REINDEX);
+
             return ExitCode::OK;
         } catch (Throwable $e) {
             $this->stdout("Reindex failed: {$e->getMessage()}\n");
             $client->deleteTemporaryIndex();
+
+            $plugin->syncStatus->recordFailure(
+                SyncStatusService::OPERATION_REINDEX,
+                $e->getMessage(),
+            );
 
             return ExitCode::UNSPECIFIED_ERROR;
         }

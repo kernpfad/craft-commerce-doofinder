@@ -73,6 +73,20 @@ class Settings extends Model
      */
     public ?string $imageTransformHandle = null;
 
+    /**
+     * Handle of the Craft Categories field on the product whose related
+     * categories become each item's Doofinder `categories` paths. Leave empty
+     * and enable {@see $categoriesAutoDiscover} to use the first Categories
+     * field on the product's field layout instead.
+     */
+    public ?string $categoriesFieldHandle = null;
+
+    /**
+     * When true and {@see $categoriesFieldHandle} is empty, the first
+     * Categories field on the product's field layout is used automatically.
+     */
+    public bool $categoriesAutoDiscover = false;
+
     public function getApiHost(): string
     {
         return "https://{$this->searchZone}-api.doofinder.com";
@@ -146,7 +160,8 @@ class Settings extends Model
             [['queueComponentId'], 'required'],
             [['queueComponentId'], 'string'],
             [['fieldMappingRaw'], 'string'],
-            [['imageFieldHandle', 'imageTransformHandle'], 'string'],
+            [['imageFieldHandle', 'imageTransformHandle', 'categoriesFieldHandle'], 'string'],
+            [['categoriesAutoDiscover'], 'boolean'],
         ];
     }
 }

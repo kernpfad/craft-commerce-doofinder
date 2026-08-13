@@ -7,6 +7,7 @@ namespace kernpfad\commercedoofinder\jobs;
 use Craft;
 use craft\queue\BaseJob;
 use kernpfad\commercedoofinder\CommerceDoofinder;
+use kernpfad\commercedoofinder\services\SyncStatusService;
 
 /**
  * Upserts every variant item for one product. Payloads are built ahead of
@@ -42,11 +43,19 @@ class SyncProductItemsJob extends BaseJob
             } catch (\Throwable $e) {
                 Craft::error("Commerce Doofinder: failed to sync item \"{$payload['id']}\" for \"{$this->productTitle}\": {$e->getMessage()}", __METHOD__);
 
+                CommerceDoofinder::getInstance()?->syncStatus->recordFailure(
+                    SyncStatusService::OPERATION_SYNC,
+                    $e->getMessage(),
+                    "item {$payload['id']} ({$this->productTitle})",
+                );
+
                 throw $e;
             }
 
             $this->setProgress($queue, ++$done / max($total, 1));
         }
+
+        CommerceDoofinder::getInstance()?->syncStatus->recordSuccess(SyncStatusService::OPERATION_SYNC);
     }
 
     protected function defaultDescription(): ?string

@@ -12,7 +12,7 @@
 - `availability` + `stock_quantity` aus Commerce Inventory (`Purchasable::getIsAvailable()`/`getStock()`)
 - `apiToken`/`searchEngineHashId` als Env-Alias (`$DOOFINDER_*`, via `App::parseEnv()`)
 - Connection-Test via `GET .../indices/{name}/` (DF-04, s.u.)
-- Limits: kein Categories-Default
+- Limits: kein Categories-Default → gelöst (DF-05, konfigurierbar/auto)
 
 ## Warum das wehtut
 
@@ -39,12 +39,18 @@ Umgesetzt in dieser Iteration (DF-04):
 
 ### P1
 
-| ID | Klasse | Item |
-|---|---|---|
-| DF-05 | B | Categories aus Commerce Categories oder konfiguriertem Feld |
-| DF-06 | B | `sale_price` Mapping wenn vorhanden |
-| DF-07 | D | CP: letzter Reindex-/Sync-Fehler |
-| DF-08 | D | Unpublished/deleted konsistent entfernen oder `not_published_in` |
+| ID | Klasse | Item | Status |
+|---|---|---|---|
+| ~~DF-05~~ | B | Categories aus Commerce Categories oder konfiguriertem Feld | ✅ erledigt |
+| ~~DF-06~~ | B | `sale_price` Mapping wenn vorhanden | ✅ erledigt |
+| ~~DF-07~~ | D | CP: letzter Reindex-/Sync-Fehler | ✅ erledigt |
+| ~~DF-08~~ | D | Unpublished/deleted konsistent entfernen oder `not_published_in` | ✅ erledigt |
+
+Umgesetzt in dieser Iteration (P1):
+- **DF-05:** `categoriesFieldHandle` + optional `categoriesAutoDiscover` (erstes Categories-Feld am Product-Layout). `CategoryPathBuilder`/`CategoryResolver` liefern Doofinder-konforme Pfade (`Parent > Child > Leaf`).
+- **DF-06:** war bereits implementiert (`getPromotionalPrice()` → `sale_price` wenn `< price`); Roadmap/README aktualisiert.
+- **DF-07:** `SyncStatusService` (Cache) + Anzeige auf der Settings-Seite; Jobs und `commerce-doofinder/reindex` schreiben Erfolg/Fehler.
+- **DF-08:** Pending/expired Produkte/Varianten (`Element::STATUS_LIVE`) werden wie disabled behandelt — aus dem Index entfernt statt upserted. `syncProductPublishState()` auf `Product::EVENT_AFTER_SAVE` entfernt alle Varianten, wenn das Product disabled/pending/expired ist (Variant-Saves übernehmen das Upsert für live Elemente).
 
 ### P2
 
@@ -63,13 +69,13 @@ Umgesetzt in dieser Iteration (DF-04):
 
 ## Agent-Prompt (kopieren)
 
-> P0 (DF-01–DF-04) ist komplett erledigt (siehe Status oben). Für die nächste Iteration eignen sich aus P1: DF-05 (Categories), DF-06 (`sale_price`) oder DF-07 (CP: letzter Fehler) — alle ohne offene Recherchefragen umsetzbar.
+> P0 (DF-01–DF-04) und P1 (DF-05–DF-08) sind komplett erledigt (siehe Status oben). Für die nächste Iteration eignen sich aus P2: DF-09 (Cron/`reindex --if-stale`), DF-10 (Payload-Mutator Events) oder DF-11 (Mapping-UI).
 
 ```markdown
 Du arbeitest im Repo `kernpfad/craft-commerce-doofinder` (Craft 5 / Commerce 5).
 
 ## Ziel
-P0 (DF-01–DF-04) ist erledigt. Payload-Builder, Settings, CatalogSyncService
+P0 (DF-01–DF-04) und P1 (DF-05–DF-08) sind erledigt. Payload-Builder, Settings, CatalogSyncService
 und den bestehenden Connection-Test (`commerce-doofinder/test`) nicht regressieren.
 
 ## Kontext
