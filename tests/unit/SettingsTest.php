@@ -175,4 +175,12 @@ class SettingsTest extends TestCase
         self::assertSame('', $settings->fieldMappingRaw);
         self::assertSame([], $settings->getFieldMapping());
     }
+
+    public function testEmptyStringFieldMappingRowsAreNormalizedToAnEmptyArray(): void
+    {
+        $settings = new Settings();
+        $settings->setFieldMappingRows('');
+
+        self::assertSame([], $settings->fieldMappingRows);
+    }
 }
