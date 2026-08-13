@@ -44,6 +44,8 @@ use yii\queue\Queue as YiiQueue;
  */
 class CatalogSyncService extends Component
 {
+    private const ELEMENT_STATUS_LIVE = 'live';
+
     /**
      * @param array<string, string> $fieldMapping craftFieldHandle => doofinderFieldKey
      */
@@ -118,7 +120,7 @@ class CatalogSyncService extends Component
 
     private function isLiveForIndex(Element $element): bool
     {
-        return $element->getStatus() === Element::STATUS_LIVE;
+        return $element->getStatus() === self::ELEMENT_STATUS_LIVE;
     }
 
     public function syncVariant(Variant $variant): void

@@ -9,7 +9,6 @@ use craft\helpers\App;
 
 /**
  * @property-read string $apiHost derived from $searchZone
- * @property-read array<string, string> $fieldMapping craftFieldHandle => doofinderFieldKey, decoded from fieldMappingRaw
  */
 class Settings extends Model
 {
@@ -101,7 +100,7 @@ class Settings extends Model
      *
      * @var array<int, array{craftFieldHandle?: string, doofinderFieldKey?: string}>
      */
-    public array $fieldMapping = [];
+    public array $fieldMappingRows = [];
 
     public function getApiHost(): string
     {
@@ -139,8 +138,8 @@ class Settings extends Model
      */
     public function getFieldMapping(): array
     {
-        if ($this->fieldMapping !== []) {
-            return self::mappingFromRows($this->fieldMapping);
+        if ($this->fieldMappingRows !== []) {
+            return self::mappingFromRows($this->fieldMappingRows);
         }
 
         return self::mappingFromRaw($this->fieldMappingRaw);
@@ -151,9 +150,19 @@ class Settings extends Model
      */
     public function getFieldMappingRows(): array
     {
+        if ($this->fieldMappingRows !== []) {
+            return array_map(
+                fn(array $row): array => [
+                    'craftFieldHandle' => (string)($row['craftFieldHandle'] ?? ''),
+                    'doofinderFieldKey' => (string)($row['doofinderFieldKey'] ?? ''),
+                ],
+                $this->fieldMappingRows,
+            );
+        }
+
         $rows = [];
 
-        foreach ($this->getFieldMapping() as $craftFieldHandle => $doofinderFieldKey) {
+        foreach (self::mappingFromRaw($this->fieldMappingRaw) as $craftFieldHandle => $doofinderFieldKey) {
             $rows[] = [
                 'craftFieldHandle' => $craftFieldHandle,
                 'doofinderFieldKey' => $doofinderFieldKey,
@@ -163,28 +172,17 @@ class Settings extends Model
         return $rows;
     }
 
-    /**
-     * @param array<int, array{craftFieldHandle?: string, doofinderFieldKey?: string}>|string|null $value
-     */
-    public function setFieldMapping(array|string|null $value): void
+    public function beforeValidate(): bool
     {
-        if ($value === null || $value === '') {
-            $this->fieldMapping = [];
-            $this->fieldMappingRaw = '';
-
-            return;
+        if (!is_array($this->fieldMappingRows)) {
+            $this->fieldMappingRows = [];
         }
 
-        if (is_string($value)) {
-            $this->fieldMappingRaw = $value;
-            $this->fieldMapping = [];
+        $this->fieldMappingRaw = $this->fieldMappingRows !== []
+            ? self::rawFromRows($this->fieldMappingRows)
+            : '';
 
-            return;
-        }
-
-        $rows = is_array($value) ? $value : [];
-        $this->fieldMapping = $rows;
-        $this->fieldMappingRaw = self::rawFromRows($rows);
+        return parent::beforeValidate();
     }
 
     /**
@@ -265,7 +263,7 @@ class Settings extends Model
             [['queueComponentId'], 'required'],
             [['queueComponentId'], 'string'],
             [['fieldMappingRaw'], 'string'],
-            [['fieldMapping'], 'safe'],
+            [['fieldMappingRows'], 'safe'],
             [['reindexStaleHours'], 'integer', 'min' => 0],
             [['imageFieldHandle', 'imageTransformHandle', 'categoriesFieldHandle'], 'string'],
             [['categoriesAutoDiscover'], 'boolean'],

@@ -46,7 +46,7 @@ Under **Settings → Plugins → Commerce Doofinder**:
 | `searchEngineHashId` | `null` | Target search engine's hash ID, 32 hex characters. Can be an environment variable alias, e.g. `$DOOFINDER_SEARCH_ENGINE_HASH_ID`. |
 | `indexName` | `product` | The index products and variants are synced into. |
 | `queueComponentId` | `queue` | Yii application component the sync jobs are pushed to. |
-| `fieldMapping` | empty | Custom field mapping rows (Craft handle → Doofinder key). Legacy `fieldMappingRaw` lines are still read when rows are empty. |
+| `fieldMappingRows` | empty | Custom field mapping rows (Craft handle → Doofinder key). Legacy `fieldMappingRaw` lines are still read when rows are empty. |
 | `reindexStaleHours` | `24` | Staleness threshold for `reindex --if-stale` (hours). `0` never skips. |
 | `imageFieldHandle` | `null` | Assets field handle (product or variant) resolved into `image_link`. |
 | `imageTransformHandle` | `null` | Optional named image transform applied to the asset above. |

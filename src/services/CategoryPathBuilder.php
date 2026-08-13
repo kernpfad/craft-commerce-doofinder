@@ -38,6 +38,10 @@ class CategoryPathBuilder
         $parts = [];
 
         foreach ($category->getAncestors()->all() as $ancestor) {
+            if (!$ancestor instanceof Category) {
+                continue;
+            }
+
             $title = $ancestor->title;
 
             if ($title !== null && $title !== '') {

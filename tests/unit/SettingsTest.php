@@ -155,12 +155,13 @@ class SettingsTest extends TestCase
     public function testSetFieldMappingRowsUpdatesTheLegacyRawStorage(): void
     {
         $settings = new Settings();
-        $settings->setFieldMapping([
+        $settings->fieldMappingRows = [
             ['craftFieldHandle' => 'brand', 'doofinderFieldKey' => 'brand'],
             ['craftFieldHandle' => '', 'doofinderFieldKey' => 'ignored'],
-        ]);
+        ];
+        self::assertTrue($settings->beforeValidate());
 
-        self::assertSame("brand=brand", $settings->fieldMappingRaw);
+        self::assertSame('brand=brand', $settings->fieldMappingRaw);
         self::assertSame(['brand' => 'brand'], $settings->getFieldMapping());
     }
 
@@ -168,7 +169,8 @@ class SettingsTest extends TestCase
     {
         $settings = new Settings();
         $settings->fieldMappingRaw = 'brand=brand';
-        $settings->setFieldMapping([]);
+        $settings->fieldMappingRows = [];
+        self::assertTrue($settings->beforeValidate());
 
         self::assertSame('', $settings->fieldMappingRaw);
         self::assertSame([], $settings->getFieldMapping());

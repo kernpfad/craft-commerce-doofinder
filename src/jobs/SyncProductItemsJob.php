@@ -43,7 +43,7 @@ class SyncProductItemsJob extends BaseJob
             } catch (\Throwable $e) {
                 Craft::error("Commerce Doofinder: failed to sync item \"{$payload['id']}\" for \"{$this->productTitle}\": {$e->getMessage()}", __METHOD__);
 
-                CommerceDoofinder::getInstance()?->syncStatus->recordFailure(
+                CommerceDoofinder::getInstance()->syncStatus->recordFailure(
                     SyncStatusService::OPERATION_SYNC,
                     $e->getMessage(),
                     "item {$payload['id']} ({$this->productTitle})",
@@ -55,7 +55,7 @@ class SyncProductItemsJob extends BaseJob
             $this->setProgress($queue, ++$done / max($total, 1));
         }
 
-        CommerceDoofinder::getInstance()?->syncStatus->recordSuccess(SyncStatusService::OPERATION_SYNC);
+        CommerceDoofinder::getInstance()->syncStatus->recordSuccess(SyncStatusService::OPERATION_SYNC);
     }
 
     protected function defaultDescription(): ?string

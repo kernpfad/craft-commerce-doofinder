@@ -6,6 +6,8 @@ namespace kernpfad\commercedoofinder\services;
 
 use Craft;
 use yii\base\Component;
+use yii\base\InvalidConfigException;
+use yii\caching\CacheInterface;
 
 /**
  * Persists the outcome of the most recent Doofinder sync or reindex run so
@@ -45,7 +47,7 @@ class SyncStatusService extends Component
         ]);
 
         if ($operation === self::OPERATION_REINDEX) {
-            Craft::$app->getCache()->set(
+            $this->getCache()->set(
                 self::REINDEX_SUCCESS_CACHE_KEY,
                 time(),
                 self::CACHE_TTL,
@@ -86,7 +88,7 @@ class SyncStatusService extends Component
 
     public function getLastSuccessfulReindexTimestamp(): ?int
     {
-        $timestamp = Craft::$app->getCache()->get(self::REINDEX_SUCCESS_CACHE_KEY);
+        $timestamp = $this->getCache()->get(self::REINDEX_SUCCESS_CACHE_KEY);
 
         return is_int($timestamp) ? $timestamp : null;
     }
@@ -96,9 +98,31 @@ class SyncStatusService extends Component
      */
     public function getLastStatus(): ?array
     {
-        $status = Craft::$app->getCache()->get(self::CACHE_KEY);
+        $status = $this->getCache()->get(self::CACHE_KEY);
 
-        return is_array($status) ? $status : null;
+        if (!is_array($status)) {
+            return null;
+        }
+
+        if (
+            !isset($status['success'], $status['operation'], $status['timestamp'])
+            || !is_bool($status['success'])
+            || !is_string($status['operation'])
+            || !is_int($status['timestamp'])
+        ) {
+            return null;
+        }
+
+        $message = $status['message'] ?? null;
+        $detail = $status['detail'] ?? null;
+
+        return [
+            'success' => $status['success'],
+            'operation' => $status['operation'],
+            'message' => is_string($message) ? $message : null,
+            'detail' => is_string($detail) ? $detail : null,
+            'timestamp' => $status['timestamp'],
+        ];
     }
 
     /**
@@ -106,6 +130,17 @@ class SyncStatusService extends Component
      */
     private function persist(array $status): void
     {
-        Craft::$app->getCache()->set(self::CACHE_KEY, $status, self::CACHE_TTL);
+        $this->getCache()->set(self::CACHE_KEY, $status, self::CACHE_TTL);
+    }
+
+    private function getCache(): CacheInterface
+    {
+        $cache = Craft::$app->getCache();
+
+        if ($cache === null) {
+            throw new InvalidConfigException('The cache component is not configured.');
+        }
+
+        return $cache;
     }
 }
