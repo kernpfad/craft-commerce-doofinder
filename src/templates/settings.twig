@@ -48,8 +48,8 @@
 
     {% js %}
     (function () {
-        const btn = document.getElementById('commerce-doofinder-test-run');
-        const result = document.getElementById('commerce-doofinder-test-result');
+        const btn = document.getElementById({{ 'commerce-doofinder-test-run'|namespaceInputId|json_encode|raw }});
+        const result = document.getElementById({{ 'commerce-doofinder-test-result'|namespaceInputId|json_encode|raw }});
         if (!btn || !result) return;
 
         btn.addEventListener('click', async () => {
