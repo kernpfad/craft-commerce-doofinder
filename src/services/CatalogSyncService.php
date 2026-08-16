@@ -110,12 +110,21 @@ class CatalogSyncService extends Component
      * Whether a product/variant should be upserted into the live index right
      * now — enabled *and* live (not pending a future post date or past its
      * expiry date). Mirrors Craft's own {@see Element::getStatus()} rules.
+     *
+     * Only the *product's* status is checked against `live` — verified
+     * against a real save that `Variant::getStatus()` returns `enabled`,
+     * never `live`: unlike `Product`, `Variant` has no post/expiry date of
+     * its own and never reports a `live`/`pending`/`expired` status, only
+     * `enabled`/`disabled` (already covered by {@see isEnabledForIndex()}).
+     * Checking a variant's status against the literal string `live` here
+     * previously made every variant "not indexable" unconditionally — real-time
+     * sync and `reindex` both silently upserted nothing, ever, for any
+     * catalog, regardless of configuration.
      */
     private function isIndexable(Product $product, Variant $variant): bool
     {
         return $this->isEnabledForIndex($product, $variant)
-            && $this->isLiveForIndex($product)
-            && $this->isLiveForIndex($variant);
+            && $this->isLiveForIndex($product);
     }
 
     private function isLiveForIndex(Element $element): bool
@@ -294,10 +303,25 @@ class CatalogSyncService extends Component
      * hand back an already-resolved iterable of elements instead — handled
      * here too so a future eager-loading optimization elsewhere doesn't
      * silently turn every `image_link` into a no-op.
+     *
+     * Checks the field layout first rather than calling `getFieldValue()`
+     * unconditionally: `Element::getFieldValue()` throws when the handle
+     * isn't part of *that* element's own field layout, and this method is
+     * deliberately called against the variant before falling back to the
+     * product — verified against a real save that a product-only image field
+     * (the plugin's own documented "just set it once on the product" setup)
+     * previously crashed every sync for that variant instead of falling
+     * through to the product as intended.
      */
     private function firstAssetFromField(Element $element): ?Asset
     {
-        $value = $element->getFieldValue((string)$this->imageFieldHandle);
+        $handle = (string)$this->imageFieldHandle;
+
+        if ($element->getFieldLayout()?->getFieldByHandle($handle) === null) {
+            return null;
+        }
+
+        $value = $element->getFieldValue($handle);
 
         if ($value instanceof AssetQuery) {
             $value = $value->one();
