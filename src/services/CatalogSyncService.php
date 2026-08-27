@@ -336,14 +336,24 @@ class CatalogSyncService extends Component
     }
 
     /**
+     * Same guard as {@see firstAssetFromField()}: `getFieldValue()` throws
+     * for a handle outside *this* product's own field layout, and a merchant
+     * can map a field handle here that only some of their product types
+     * actually carry. A missing field maps to `null`, which
+     * `FieldMapper::mapFields()` already treats the same as a present-but-empty
+     * one — simply omitted from the payload.
+     *
      * @return array<string, mixed>
      */
     private function resolveCustomFields(Product $product): array
     {
+        $layout = $product->getFieldLayout();
         $fieldValues = [];
 
         foreach (array_keys($this->fieldMapping) as $fieldHandle) {
-            $fieldValues[$fieldHandle] = $product->getFieldValue($fieldHandle);
+            $fieldValues[$fieldHandle] = $layout?->getFieldByHandle($fieldHandle) === null
+                ? null
+                : $product->getFieldValue($fieldHandle);
         }
 
         return $this->fieldMapper->mapFields($this->fieldMapping, $fieldValues);

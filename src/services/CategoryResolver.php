@@ -65,6 +65,17 @@ class CategoryResolver
      */
     private function loadCategories(Product $product, string $handle): array
     {
+        // A merchant-configured $fieldHandle (unlike an auto-discovered one,
+        // which only ever returns a handle already found on this product's
+        // layout) can point at a field that doesn't exist on *this*
+        // product's type — different product types can have different
+        // layouts. Element::getFieldValue() throws for a handle outside the
+        // element's own layout, not just returns empty, so this needs its
+        // own check first.
+        if ($product->getFieldLayout()?->getFieldByHandle($handle) === null) {
+            return [];
+        }
+
         $value = $product->getFieldValue($handle);
 
         if ($value instanceof CategoryQuery) {

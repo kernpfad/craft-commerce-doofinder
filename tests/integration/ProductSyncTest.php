@@ -35,6 +35,7 @@ use craft\commerce\models\ProductTypeSite;
 use craft\commerce\Plugin as Commerce;
 use kernpfad\commercedoofinder\CommerceDoofinder;
 use kernpfad\commercedoofinder\services\CatalogSyncService;
+use kernpfad\commercedoofinder\services\CategoryResolver;
 use PHPUnit\Framework\TestCase;
 
 class ProductSyncTest extends TestCase
@@ -197,6 +198,45 @@ class ProductSyncTest extends TestCase
         $payloads = (new CatalogSyncService())->buildVariantPayloads($product);
 
         self::assertArrayNotHasKey('stock_quantity', $payloads[0]);
+    }
+
+    public function testAMisconfiguredCategoriesFieldHandleIsOmittedRatherThanCrashing(): void
+    {
+        // Regression test: a merchant-configured categoriesFieldHandle
+        // (unlike auto-discover, which only ever finds a handle already on
+        // the layout) can point at a field this product type's layout
+        // doesn't carry — a different product type might have it, this one
+        // doesn't. getFieldValue() throws for a handle outside the
+        // element's own layout, so building the payload used to blow up
+        // entirely instead of just omitting categories.
+        $product = $this->createProduct(19.0);
+
+        $service = new CatalogSyncService(
+            categoryResolver: new CategoryResolver(fieldHandle: 'notOnTheDoofinderTestsLayout'),
+        );
+
+        $payloads = $service->buildVariantPayloads($product);
+
+        self::assertCount(1, $payloads);
+        self::assertArrayNotHasKey('categories', $payloads[0]);
+    }
+
+    public function testAMisconfiguredFieldMappingHandleIsOmittedRatherThanCrashing(): void
+    {
+        // Same bug, the fieldMappingRows path: mapping a craftFieldHandle
+        // that isn't on this product's layout used to throw
+        // InvalidFieldException instead of just leaving that mapped key out
+        // of the payload.
+        $product = $this->createProduct(19.0);
+
+        $service = new CatalogSyncService(
+            fieldMapping: ['notOnTheDoofinderTestsLayout' => 'doofinderKey'],
+        );
+
+        $payloads = $service->buildVariantPayloads($product);
+
+        self::assertCount(1, $payloads);
+        self::assertArrayNotHasKey('doofinderKey', $payloads[0]);
     }
 
     public function testGetSyncQueueReturnsCraftsDefaultQueueByDefault(): void
