@@ -4,6 +4,8 @@ A Doofinder integration for Craft Commerce: real-time product/variant sync to a 
 
 The plugin's whole job is keeping the index in sync. It never runs inline in a customer-facing request.
 
+See [CHANGELOG.md](CHANGELOG.md) for release notes, [CONTRIBUTING.md](CONTRIBUTING.md) for local QA commands, and [SECURITY.md](SECURITY.md) for vulnerability reporting.
+
 ## Requirements
 
 - Craft CMS 5.0.0+
