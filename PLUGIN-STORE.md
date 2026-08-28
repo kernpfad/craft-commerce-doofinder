@@ -4,12 +4,17 @@ Paste into the [Craft Plugin Store](https://plugins.craftcms.com) developer port
 
 **Documentation URL:** https://kernpfad.dev/en/craft/plugins/craft-commerce-doofinder/docs/
 
+The fenced blocks below are the pasteable source (Markdown as the store field expects it). Copy the inner text, not the surrounding prose.
+
 ## Short description
 
+```
 Live Commerce catalog sync to Doofinder, zero-downtime reindex, and queued API calls — so search stays accurate without blocking product saves.
+```
 
 ## Long description
 
+```markdown
 **Commerce Doofinder** keeps a Doofinder search index in sync with Craft Commerce: one item per variant, grouped under the parent product, with queue-isolated API calls — so a Doofinder outage never blocks a product save. Doofinder’s own Layer widget handles the storefront; this plugin only manages the index.
 
 ### Live product / variant sync
@@ -34,3 +39,4 @@ Set an Assets field handle (variant first, then product) for `image_link`, optio
 - Dedicated queue component supported
 
 **Requires** Craft CMS 5, Craft Commerce 5, PHP 8.2+, and a Doofinder account with an API token and search engine hash ID.
+```
