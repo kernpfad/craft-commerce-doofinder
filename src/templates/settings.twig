@@ -1,0 +1,198 @@
+{% import "_includes/forms" as forms %}
+
+<div class="flex-fields">
+    {{ forms.selectField({
+        label: "Search zone"|t('commerce-doofinder'),
+        instructions: "Your Doofinder account's regional API endpoint, shown in the Doofinder Admin Panel."|t('commerce-doofinder'),
+        id: 'searchZone',
+        name: 'searchZone',
+        value: settings.searchZone,
+        options: [
+            { label: 'Europe (eu1)', value: 'eu1' },
+            { label: 'US (us1)', value: 'us1' },
+            { label: 'Asia Pacific (ap1)', value: 'ap1' },
+        ],
+    }) }}
+
+    {{ forms.autosuggestField({
+        label: "API token"|t('commerce-doofinder'),
+        instructions: "From the Doofinder Admin Panel: Account → API Keys. Can be an environment variable, e.g. `$DOOFINDER_API_TOKEN`."|t('commerce-doofinder'),
+        id: 'apiToken',
+        name: 'apiToken',
+        value: settings.apiToken,
+        suggestEnvVars: true,
+    }) }}
+
+    {{ forms.autosuggestField({
+        label: "Search engine hash ID"|t('commerce-doofinder'),
+        instructions: "The target search engine's hash ID (32 hex characters), from the Doofinder Admin Panel. Can be an environment variable, e.g. `$DOOFINDER_SEARCH_ENGINE_HASH_ID`."|t('commerce-doofinder'),
+        id: 'searchEngineHashId',
+        name: 'searchEngineHashId',
+        value: settings.searchEngineHashId,
+        suggestEnvVars: true,
+    }) }}
+
+    {{ forms.textField({
+        label: "Index name"|t('commerce-doofinder'),
+        instructions: "The Doofinder index name products/variants are synced into."|t('commerce-doofinder'),
+        id: 'indexName',
+        name: 'indexName',
+        value: settings.indexName,
+        placeholder: 'product',
+    }) }}
+
+    <div id="commerce-doofinder-test" class="field">
+        <button type="button" class="btn" id="commerce-doofinder-test-run">{{ "Test connection"|t('commerce-doofinder') }}</button>
+        <span id="commerce-doofinder-test-result" class="hidden" style="margin-left: 1rem;"></span>
+    </div>
+
+    {% js %}
+    (function () {
+        const btn = document.getElementById({{ 'commerce-doofinder-test-run'|namespaceInputId|json_encode|raw }});
+        const result = document.getElementById({{ 'commerce-doofinder-test-result'|namespaceInputId|json_encode|raw }});
+        if (!btn || !result) return;
+
+        btn.addEventListener('click', async () => {
+            btn.setAttribute('disabled', 'disabled');
+            result.classList.add('hidden');
+
+            const body = new FormData();
+            body.append(Craft.csrfTokenName, Craft.csrfTokenValue);
+
+            try {
+                const response = await fetch('{{ actionUrl('commerce-doofinder/cp/test/run') }}', {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json' },
+                    body,
+                });
+                const data = await response.json();
+                result.textContent = data.message;
+                result.className = data.success ? 'success' : 'error';
+            } catch (error) {
+                result.textContent = String(error);
+                result.className = 'error';
+            } finally {
+                btn.removeAttribute('disabled');
+            }
+        });
+    })();
+    {% endjs %}
+
+    {{ forms.textField({
+        label: "Queue component ID"|t('commerce-doofinder'),
+        instructions: "The Yii application component this plugin's sync jobs are pushed to. Leave as `queue` to use Craft's own default queue. Set this to a different component ID — defined in `config/app.php`, backed by a real message-queue driver — to isolate Doofinder sync traffic from the rest of the site's queue jobs. Falls back to the default queue if the configured component isn't available."|t('commerce-doofinder'),
+        id: 'queueComponentId',
+        name: 'queueComponentId',
+        value: settings.queueComponentId,
+        placeholder: 'queue',
+    }) }}
+
+    {{ forms.editableTableField({
+        label: "Custom field mapping"|t('commerce-doofinder'),
+        instructions: "Map Craft product field handles to Doofinder item keys. Read from the product, applied to every variant of that product. Anything not listed here is never sent to Doofinder."|t('commerce-doofinder'),
+        id: 'fieldMappingRows',
+        name: 'fieldMappingRows',
+        cols: {
+            craftFieldHandle: {
+                heading: "Craft field handle"|t('commerce-doofinder'),
+                type: 'singleline',
+                placeholder: 'brand',
+            },
+            doofinderFieldKey: {
+                heading: "Doofinder field key"|t('commerce-doofinder'),
+                type: 'singleline',
+                placeholder: 'brand',
+            },
+        },
+        rows: settings.getFieldMappingRows(),
+        allowAdd: true,
+        allowDelete: true,
+        allowReorder: true,
+        errors: settings.getErrors('fieldMappingRows'),
+    }) }}
+
+    {{ forms.textField({
+        label: "Image field handle"|t('commerce-doofinder'),
+        instructions: "Handle of the Assets field (on the product or the variant) whose first asset becomes each item's `image_link`. Checked on the variant first, falling back to the product. Leave empty to omit `image_link`."|t('commerce-doofinder'),
+        id: 'imageFieldHandle',
+        name: 'imageFieldHandle',
+        value: settings.imageFieldHandle,
+        placeholder: 'productImage',
+    }) }}
+
+    {{ forms.textField({
+        label: "Image transform handle"|t('commerce-doofinder'),
+        instructions: "Optional named image transform applied to the asset above before its URL is used. Leave empty to use the asset's original URL."|t('commerce-doofinder'),
+        id: 'imageTransformHandle',
+        name: 'imageTransformHandle',
+        value: settings.imageTransformHandle,
+    }) }}
+
+    {{ forms.textField({
+        label: "Categories field handle"|t('commerce-doofinder'),
+        instructions: "Handle of the Categories field on the product whose related categories become each item's Doofinder `categories` paths (`Parent > Child > Leaf`). Leave empty to omit categories unless auto-discover is enabled below."|t('commerce-doofinder'),
+        id: 'categoriesFieldHandle',
+        name: 'categoriesFieldHandle',
+        value: settings.categoriesFieldHandle,
+        placeholder: 'productCategories',
+    }) }}
+
+    {{ forms.lightswitchField({
+        label: "Auto-discover categories field"|t('commerce-doofinder'),
+        instructions: "When enabled and no categories field handle is set above, the first Categories field on the product's field layout is used automatically."|t('commerce-doofinder'),
+        id: 'categoriesAutoDiscover',
+        name: 'categoriesAutoDiscover',
+        on: settings.categoriesAutoDiscover,
+    }) }}
+
+    {{ forms.textField({
+        label: "Reindex stale threshold (hours)"|t('commerce-doofinder'),
+        instructions: "Used by `php craft commerce-doofinder/reindex --if-stale`. Skip the run when the last successful reindex is newer than this many hours. Set to `0` to never skip."|t('commerce-doofinder'),
+        id: 'reindexStaleHours',
+        name: 'reindexStaleHours',
+        value: settings.reindexStaleHours,
+        type: 'number',
+    }) }}
+
+    <div class="field">
+        <div class="heading">
+            <label>{{ "Scheduled full reindex"|t('commerce-doofinder') }}</label>
+        </div>
+        <div class="instructions">
+            <p>{{ "Real-time sync covers day-to-day edits; schedule a full reindex as a safety net (e.g. nightly). Example cron entry (adjust the path to your project):"|t('commerce-doofinder') }}</p>
+            <pre class="code" style="white-space: pre-wrap;">0 3 * * * /usr/bin/php /path/to/craft commerce-doofinder/reindex --if-stale</pre>
+            {% if lastReindexTimestamp %}
+                <p>{{ "Last successful full reindex: {date}."|t('commerce-doofinder', { date: lastReindexTimestamp|date('short') }) }}</p>
+            {% else %}
+                <p>{{ "No successful full reindex recorded yet."|t('commerce-doofinder') }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if lastSyncStatus %}
+        <div class="field">
+            <div class="heading">
+                <label>{{ "Last sync / reindex status"|t('commerce-doofinder') }}</label>
+            </div>
+            <div class="instructions">
+                <p>
+                    {% if lastSyncStatus.success %}
+                        <span class="success">{{ "Last {operation} succeeded on {date}."|t('commerce-doofinder', {
+                            operation: lastSyncStatus.operation,
+                            date: lastSyncStatus.timestamp|date('short'),
+                        }) }}</span>
+                    {% else %}
+                        <span class="error">{{ "Last {operation} failed on {date}: {message}"|t('commerce-doofinder', {
+                            operation: lastSyncStatus.operation,
+                            date: lastSyncStatus.timestamp|date('short'),
+                            message: lastSyncStatus.message,
+                        }) }}</span>
+                        {% if lastSyncStatus.detail %}
+                            <br><code>{{ lastSyncStatus.detail }}</code>
+                        {% endif %}
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    {% endif %}
+</div>

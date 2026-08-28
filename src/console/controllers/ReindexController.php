@@ -1,0 +1,136 @@
+<?php
+
+declare(strict_types=1);
+
+namespace kernpfad\commercedoofinder\console\controllers;
+
+use craft\commerce\elements\Product;
+use craft\console\Controller;
+use kernpfad\commercedoofinder\CommerceDoofinder;
+use kernpfad\commercedoofinder\services\DoofinderClient;
+use kernpfad\commercedoofinder\services\SyncStatusService;
+use Throwable;
+use yii\console\ExitCode;
+
+/**
+ * `php craft commerce-doofinder/reindex` — a full-catalog resync using Doofinder's
+ * documented temporary-index workflow (verified against
+ * https://docs.doofinder.com/api-reference/indices/): build a complete,
+ * fresh index in a locked staging area, then atomically swap it in for the
+ * live one. The live index keeps serving search traffic, unaffected, for
+ * the entire duration of the reindex — a merchant's search never goes
+ * half-updated or empty partway through a run, unlike pushing updates
+ * directly against the live index.
+ */
+class ReindexController extends Controller
+{
+    /**
+     * When true, skip the run if the last successful reindex is still within
+     * {@see Settings::$reindexStaleHours} (or `--stale-hours` when passed).
+     */
+    public bool $ifStale = false;
+
+    /**
+     * Override for {@see Settings::$reindexStaleHours} on this invocation only.
+     */
+    public ?int $staleHours = null;
+
+    /**
+     * @return string[]
+     */
+    public function options($actionID): array
+    {
+        $options = parent::options($actionID);
+
+        if ($actionID === 'index') {
+            $options[] = 'ifStale';
+            $options[] = 'staleHours';
+        }
+
+        return $options;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function optionAliases(): array
+    {
+        return array_merge(parent::optionAliases(), [
+            'if-stale' => 'ifStale',
+            'stale-hours' => 'staleHours',
+        ]);
+    }
+
+    public function actionIndex(): int
+    {
+        $plugin = CommerceDoofinder::getInstance();
+
+        if ($plugin === null) {
+            $this->stdout("Commerce Doofinder is not installed.\n");
+
+            return ExitCode::UNSPECIFIED_ERROR;
+        }
+
+        $client = $plugin->getDoofinderClient();
+
+        if ($client === null) {
+            $this->stdout("Commerce Doofinder is not fully configured (API token/search engine hash ID) — aborting.\n");
+
+            return ExitCode::CONFIG;
+        }
+
+        $staleHours = $this->staleHours ?? $plugin->getSettings()->reindexStaleHours;
+
+        if ($this->ifStale && !$plugin->syncStatus->isReindexStale($staleHours)) {
+            $last = $plugin->syncStatus->getLastSuccessfulReindexTimestamp();
+            $when = $last !== null ? date('Y-m-d H:i:s', $last) : 'never';
+            $this->stdout("Skipping reindex — last successful reindex at {$when} is still within {$staleHours} hour(s).\n");
+
+            return ExitCode::OK;
+        }
+
+        $this->stdout("Creating a temporary index...\n");
+        $client->createTemporaryIndex();
+
+        $itemCount = 0;
+
+        try {
+            $chunk = [];
+
+            /** @var Product $product */
+            foreach (Product::find()->each() as $product) {
+                foreach ($plugin->catalogSync->buildVariantPayloads($product) as $payload) {
+                    $chunk[] = $payload;
+                    $itemCount++;
+
+                    if (count($chunk) >= DoofinderClient::BULK_ITEMS_LIMIT) {
+                        $client->bulkUpsertItems($chunk);
+                        $chunk = [];
+                    }
+                }
+            }
+
+            if ($chunk !== []) {
+                $client->bulkUpsertItems($chunk);
+            }
+
+            $this->stdout("Replacing the live index with the freshly built one...\n");
+            $client->replaceIndexWithTemporary();
+            $this->stdout("Done. {$itemCount} items indexed.\n");
+
+            $plugin->syncStatus->recordSuccess(SyncStatusService::OPERATION_REINDEX);
+
+            return ExitCode::OK;
+        } catch (Throwable $e) {
+            $this->stdout("Reindex failed: {$e->getMessage()}\n");
+            $client->deleteTemporaryIndex();
+
+            $plugin->syncStatus->recordFailure(
+                SyncStatusService::OPERATION_REINDEX,
+                $e->getMessage(),
+            );
+
+            return ExitCode::UNSPECIFIED_ERROR;
+        }
+    }
+}

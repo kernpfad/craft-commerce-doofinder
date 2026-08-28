@@ -1,0 +1,93 @@
+{
+    "name": "kernpfad/craft-commerce-doofinder",
+    "description": "A Doofinder integration for Craft Commerce: real-time product/variant sync to a Doofinder search index plus a zero-downtime full-catalog reindex command. Doofinder's own drop-in search widget handles the front end.",
+    "type": "craft-plugin",
+    "keywords": [
+        "craft",
+        "cms",
+        "craftcms",
+        "craft-plugin",
+        "commerce",
+        "doofinder",
+        "search",
+        "catalog"
+    ],
+    "license": "proprietary",
+    "support": {
+        "email": "rene.neuburger@gmx.de",
+        "docs": "https://github.com/kernpfad/craft-commerce-doofinder",
+        "issues": "https://github.com/kernpfad/craft-commerce-doofinder/issues",
+        "source": "https://github.com/kernpfad/craft-commerce-doofinder",
+        "security": "https://github.com/kernpfad/craft-commerce-doofinder/blob/main/SECURITY.md"
+    },
+    "require": {
+        "php": "^8.2",
+        "craftcms/cms": "^5.0.0",
+        "craftcms/commerce": "^5.0.0"
+    },
+    "require-dev": {
+        "craftcms/ecs": "dev-main",
+        "craftcms/rector": "dev-craft6",
+        "phpunit/phpunit": "^11.0",
+        "vlucas/phpdotenv": "^5.6",
+        "phpstan/phpstan": "^2.2",
+        "phpstan/phpstan-phpunit": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "kernpfad\\commercedoofinder\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "kernpfad\\commercedoofinder\\tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "handle": "commerce-doofinder",
+        "name": "Commerce Doofinder",
+        "developer": "Kernpfad",
+        "documentationUrl": "https://github.com/kernpfad/craft-commerce-doofinder",
+        "class": "kernpfad\\commercedoofinder\\CommerceDoofinder",
+        "changelogUrl": "https://raw.githubusercontent.com/kernpfad/craft-commerce-doofinder/main/CHANGELOG.md",
+        "developerUrl": "https://kernpfad.dev",
+        "imprintUrl": "https://kernpfad.dev/en/legal-notice",
+        "privacyPolicyUrl": "https://kernpfad.dev/en/privacy-policy",
+        "termsUrl": "https://kernpfad.dev/en/terms-and-conditions"
+    },
+    "config": {
+        "allow-plugins": {
+            "craftcms/plugin-installer": true,
+            "yiisoft/yii2-composer": true
+        },
+        "preferred-install": "source",
+        "sort-packages": true
+    },
+    "scripts": {
+        "hooks:install": "git config core.hooksPath .githooks",
+        "post-install-cmd": "@hooks:install",
+        "post-update-cmd": "@hooks:install",
+        "check-cs": "ecs check --ansi",
+        "fix-cs": "ecs check --ansi --fix",
+        "phpstan": "phpstan analyse --memory-limit=1G --ansi",
+        "rector": "rector process --dry-run --ansi",
+        "rector:fix": "rector process --ansi",
+        "check": [
+            "@check-cs",
+            "@phpstan",
+            "@rector",
+            "@test:unit"
+        ],
+        "test": "phpunit --testsuite unit",
+        "test:unit": "phpunit --testsuite unit",
+        "test:integration": "phpunit --testsuite integration"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "authors": [
+        {
+            "name": "Kernpfad",
+            "homepage": "https://kernpfad.dev"
+        }
+    ]
+}

@@ -1,0 +1,72 @@
+<?php
+
+declare(strict_types=1);
+
+namespace kernpfad\commercedoofinder\tests\unit;
+
+use kernpfad\commercedoofinder\services\FieldMapper;
+use PHPUnit\Framework\TestCase;
+
+class FieldMapperTest extends TestCase
+{
+    private FieldMapper $mapper;
+
+    protected function setUp(): void
+    {
+        $this->mapper = new FieldMapper();
+    }
+
+    public function testMapsConfiguredFieldsToTheirDoofinderKeys(): void
+    {
+        $result = $this->mapper->mapFields(
+            ['brand' => 'brand', 'material' => 'material'],
+            ['brand' => 'Acme', 'material' => 'Cotton'],
+        );
+
+        self::assertSame(['brand' => 'Acme', 'material' => 'Cotton'], $result);
+    }
+
+    public function testFieldsNotInTheMappingAreNeverIncluded(): void
+    {
+        $result = $this->mapper->mapFields(
+            ['brand' => 'brand'],
+            ['brand' => 'Acme', 'internalNote' => 'secret'],
+        );
+
+        self::assertSame(['brand' => 'Acme'], $result);
+    }
+
+    public function testSkipsMappedFieldsThatAreEmptyOrNull(): void
+    {
+        $result = $this->mapper->mapFields(
+            ['brand' => 'brand', 'material' => 'material'],
+            ['brand' => null, 'material' => ''],
+        );
+
+        self::assertSame([], $result);
+    }
+
+    public function testSkipsAMappingEntryWhoseFieldValueWasNeverProvided(): void
+    {
+        $result = $this->mapper->mapFields(['brand' => 'brand'], []);
+
+        self::assertSame([], $result);
+    }
+
+    public function testSkipsAMappingEntryWithAnEmptyDoofinderKey(): void
+    {
+        $result = $this->mapper->mapFields(['brand' => ''], ['brand' => 'Acme']);
+
+        self::assertSame([], $result);
+    }
+
+    public function testNormalizesIterableFieldValuesToACommaSeparatedString(): void
+    {
+        $result = $this->mapper->mapFields(
+            ['materials' => 'material'],
+            ['materials' => ['Cotton', 'Wool']],
+        );
+
+        self::assertSame(['material' => 'Cotton, Wool'], $result);
+    }
+}
