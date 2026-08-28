@@ -12,10 +12,28 @@ The fenced blocks below are the pasteable source (Markdown as the store field ex
 Live Commerce catalog sync to Doofinder, zero-downtime reindex, and queued API calls — so search stays accurate without blocking product saves.
 ```
 
+## Features
+
+```markdown
+- Live catalog sync (one Doofinder item per variant, grouped under the product)
+- Queue-isolated API calls — a Doofinder outage never blocks a product save
+- Zero-downtime full reindex (temporary index, then atomic swap)
+- Images, category paths, stock, availability, and sale price
+- Custom field mapping plus an agency payload hook
+- No storefront UI — Doofinder’s Layer widget stays on the Doofinder side
+```
+
 ## Long description
 
 ```markdown
 **Commerce Doofinder** keeps a Doofinder search index in sync with Craft Commerce: one item per variant, grouped under the parent product, with queue-isolated API calls — so a Doofinder outage never blocks a product save. Doofinder’s own Layer widget handles the storefront; this plugin only manages the index.
+
+- Live catalog sync (one Doofinder item per variant, grouped under the product)
+- Queue-isolated API calls — a Doofinder outage never blocks a product save
+- Zero-downtime full reindex (temporary index, then atomic swap)
+- Images, category paths, stock, availability, and sale price
+- Custom field mapping plus an agency payload hook
+- No storefront UI — Doofinder’s Layer widget stays on the Doofinder side
 
 ### Live product / variant sync
 
