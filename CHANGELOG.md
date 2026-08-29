@@ -1,6 +1,6 @@
 # Release Notes for Commerce Doofinder
 
-## 1.0.0 - 2026-08-28
+## 1.0.0 - 2026-08-29
 
 - **Fixed a critical bug where real-time sync and full reindex both silently indexed nothing, ever.** `CatalogSyncService::isIndexable()` required a variant's `getStatus()` to equal the literal string `"live"` — but `Variant`, unlike `Product`, has no post/expiry date of its own and never reports `live`/`pending`/`expired`, only `enabled`/`disabled` (already covered separately). Every variant therefore always failed this check, so every sync attempt — real-time and `reindex` alike — always took the "not indexable" branch and queued a *deletion* instead of an upsert. Verified live: `buildVariantPayloads()` (the exact method `reindex` uses) returned zero payloads for a completely normal, fully enabled, live product. Fixed by only checking live/pending/expired status on the product, which is the only one of the two that actually has that concept.
 - **Fixed a crash when the configured `image_link` field exists only on the product, not the variant** — exactly the setup the plugin's own documentation recommends ("just set it once on the product"). Resolving the image checks the variant first, falling back to the product; but calling `Element::getFieldValue()` for a handle that isn't part of that specific element's field layout throws, rather than returning null, so the recommended configuration crashed every single sync. Fixed by checking the field layout before reading the value.
@@ -9,7 +9,7 @@
 
 Both the indexing bug and the field-layout crash were found live while seeding real product/category/image data to screenshot the settings and sync-status screens for documentation — the button bug came from noticing `Test connection` produced no visible reaction at all on the real settings page.
 - Real-time sync of products/variants to a Doofinder search index on save/delete, grouped by product via `group_id`/`group_leader`.
-- `php craft doofinder/reindex` — a zero-downtime full-catalog reindex using Doofinder's temporary-index + atomic-replace workflow.
+- `php craft commerce-doofinder/reindex` — a zero-downtime full-catalog reindex using Doofinder's temporary-index + atomic-replace workflow.
 - Custom field mapping — map any Craft product field to any Doofinder item custom field.
 - Configurable queue component, same pattern as Commerce Klaviyo.
 - Every Doofinder API call runs on the queue; a Doofinder outage never blocks a product save.
